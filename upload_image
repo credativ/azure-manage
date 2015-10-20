@@ -1,0 +1,10 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# Copyright: 2015 Bastian Blank
+# License: MIT, see LICENSE.txt for details.
+
+from azure_manage.cli.upload_image import Main
+
+
+if __name__ == '__main__':
+    Main()()
