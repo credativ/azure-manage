@@ -4,6 +4,7 @@
 # License: MIT, see LICENSE.txt for details.
 
 import os
+from datetime import date
 
 from azure.servicemanagement.servicemanagementservice import ServiceManagementService as ServiceManagementServiceBase
 from azure.servicemanagement.servicemanagementservice import _XmlSerializer
@@ -15,7 +16,7 @@ def _serialize_os_image_to_xml(
         icon_uri=u'', small_icon_uri=u'',
         eula=u'', privacy_uri=u'',
         language=u'',
-        show_in_gui=True):
+        show_in_gui=True, published_date=None):
     return _XmlSerializer.doc_from_data(
         'OSImage',
         [
@@ -31,6 +32,7 @@ def _serialize_os_image_to_xml(
             ('SmallIconUri', small_icon_uri),
             ('Language', language),
             ('ShowInGui', show_in_gui),
+            ('PublishedDate', (published_date or date.today()).isoformat()),
             ('RecommendedVMSize', u''),
         ],
     )
