@@ -27,8 +27,8 @@ class Main:
             print('Automatic mode and no automatic upload allowed, ignoring')
             sys.exit(0)
 
-        self.image_label = config_section['image_label']
         self.image_name = config_section['image_name'].format_map(vars(args))
+        self.image_label = config_section.get('image_label', self.image_name)
         self.image_meta = config_section['image_meta']
         self.image_filename = self.image_name + '.raw'
 
