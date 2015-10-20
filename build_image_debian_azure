@@ -1,0 +1,412 @@
+#!/bin/sh
+
+set -e
+
+# Parse input parameters
+usage() {
+	echo "Usage: $0 --release|-r <jessie|wheezy> [options]
+Options are:
+ --minimal|-m
+ --debootstrap-url|-u <debootstrap-mirror> (default: http://http.debian.net/debian)
+ --sources.list-mirror|-s <source-list-mirror> (default: http://debian-archive.trafficmanager.net/debian)
+ --extra-packages|-e <package>,<package>,...
+ --hook-script|-hs <hook-script>
+ --image-size|-is <image-size> (default: 30G)
+ --automatic-resize|-ar
+ --automatic-resize-space|-ars <suplementary-space> (default: 50M)
+ --login|-l <userlogin> (default: debian)
+ --password|-p <root-password> (dangerous option: avoid it if possible)
+For more info: man $0"
+	exit 1
+}
+
+EXTRA=yes
+for i in $@ ; do
+	case "${1}" in
+	"--extra-packages"|"-e")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the extra packages"
+			usage
+		fi
+		EXTRA_PACKAGES=${2}
+		shift
+		shift
+	;;
+	"--debootstrap-url"|"-u")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the debootstrap URL"
+			usage
+		fi
+		DEB_MIRROR=${2}
+		shift
+		shift
+	;;
+	"--minimal"|"-m")
+		EXTRA=no
+		shift
+	;;
+	"--automatic-resize"|"-ar")
+		AUTOMATIC_RESIZE=yes
+		shift
+	;;
+	"--automatic-resize-space"|"-ars")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the suplementary space"
+			usage
+		fi
+		AUTOMATIC_RESIZE_SPACE=${2}
+		shift
+		shift
+	;;
+	"--image-size"|"-is")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the image size"
+			usage
+		fi
+		IMAGE_SIZE=${2}
+		shift
+		shift
+	;;
+	"--hook-script"|"-hs")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the hook script"
+			usage
+		fi
+		if ! [ -x "${2}" ] ; then
+			echo "Hook script not executable"
+		fi
+		HOOK_SCRIPT=${2}
+		shift
+		shift
+	;;
+	"--sources.list-mirror"|"-s")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the hook script"
+			usage
+		fi
+		SOURCE_LIST_MIRROR=${2}
+		shift
+		shift
+	;;
+	"--release"|"-r")
+		if [ "${2}" = "wheezy" ] || [ "${2}" = "jessie" ] || [ "${2}" = "stretch" ] || [ "${2}" = "buster" ] ; then
+			RELEASE=${2}
+			shift
+			shift
+		else
+			echo "Release not recognized."
+			usage
+		fi
+	;;
+	"--login"|"-l")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the user login"
+			usage
+		fi
+		USER_LOGIN=${2}
+		shift
+		shift
+	;;
+	"--password"|"-p")
+		if [ -z "${2}" ] ; then
+			echo "No parameter defining the root password"
+		fi
+		ROOT_PASSWORD=${2}
+		shift
+		shift
+	;;
+	"--output"|"-o")
+		if [ -z "${2}" ] ; then
+			echo "No output file specified"
+		fi
+		OUTPUT=${2}
+		shift
+		shift
+	;;
+	*)
+	;;
+	esac
+done
+
+if [ -z "${RELEASE}" ] ; then
+	echo "Release not recognized: please specify the -r parameter."
+	usage
+fi
+case "${RELEASE}" in
+	"wheezy")
+		RELEASE_NUM=7
+	;;
+	"jessie")
+		RELEASE_NUM=8
+	;;
+	"stretch")
+		RELEASE_NUM=9
+	;;
+	"buster")
+		RELEASE_NUM=10
+	;;
+esac
+
+if [ -z "${DEB_MIRROR}" ] ; then
+	DEB_MIRROR=http://httpredir.debian.org/debian
+fi
+if [ -z "${EXTRA_PACKAGES}" ] ; then
+	EXTRA_PACKAGES=joe,most,screen,less,vim,bzip2,nano
+fi
+if [ -z "${SOURCE_LIST_MIRROR}" ] ; then
+	SOURCE_LIST_MIRROR=http://debian-archive.trafficmanager.net/debian
+fi
+if [ -z "${IMAGE_SIZE}" ] ; then
+	IMAGE_SIZE=30
+fi
+if [ -z "${AUTOMATIC_RESIZE_SPACE}" ] ; then
+	AUTOMATIC_RESIZE_SPACE=50
+fi
+if [ -z "${USER_LOGIN}" ] ; then
+	USER_LOGIN=debian
+fi
+if [ -z "${OUTPUT}" ] ; then
+	OUTPUT=debian-${RELEASE}-$(TZ=UTC date '+%Y%m%d%H%M')-amd64
+fi
+
+NEEDED_PACKAGES=sudo,locales,extlinux,openssh-server,file
+if [ "${RELEASE}" = "wheezy" ] ; then
+	NEEDED_PACKAGES=${NEEDED_PACKAGES},acpid,acpi-support-base
+else
+	NEEDED_PACKAGES=${NEEDED_PACKAGES},dbus,libpam-systemd
+fi
+
+if [ ${EXTRA} = "no" ] ; then
+	PKG_LIST=${NEEDED_PACKAGES}
+else
+	PKG_LIST=${NEEDED_PACKAGES},${EXTRA_PACKAGES}
+fi
+if ! [ `whoami` = "root" ] ; then
+	echo "You have to be root to run this script"
+	exit 1
+fi
+RAW_NAME=${OUTPUT}.raw
+VHD_NAME=${OUTPUT}.vhd
+rm -f ${RAW_NAME}
+
+set -x
+
+######################################
+### Prepare the HDD (format, ext.) ###
+######################################
+PARTED=/sbin/parted
+rm -f $RAW_NAME
+qemu-img create ${RAW_NAME} ${IMAGE_SIZE}G
+
+${PARTED} -s ${RAW_NAME} mktable msdos
+${PARTED} -s -a optimal ${RAW_NAME} mkpart primary ext4 1Mi 100%
+${PARTED} -s ${RAW_NAME} set 1 boot on
+install-mbr ${RAW_NAME}
+RESULT_KPARTX=`kpartx -asv ${RAW_NAME} 2>&1`
+
+if echo "${RESULT_KPARTX}" | grep "^add map" ; then
+	LOOP_DEVICE=`echo ${RESULT_KPARTX} | cut -d" " -f3`
+	echo "kpartx mounted using: ${LOOP_DEVICE}"
+else
+	echo "It seems kpartx didn't mount the image correctly: exiting."
+	exit 1
+fi
+
+cleanup(){
+	error=$?
+	[ ! -d "${MOUNT_DIR}" ] && return
+	echo
+	echo "error $error, umounting $MOUNT_DIR"
+	chroot ${MOUNT_DIR} umount /proc || true
+	chroot ${MOUNT_DIR} umount /sys || true
+	umount ${MOUNT_DIR}
+	rmdir ${MOUNT_DIR}
+	kpartx -d ${RAW_NAME}
+	exit $error
+}
+trap "cleanup" EXIT TERM INT
+
+mkfs.ext4 /dev/mapper/${LOOP_DEVICE}
+UUID=$(blkid -o value -s UUID /dev/mapper/${LOOP_DEVICE})
+
+# No fsck because of X days without checks
+tune2fs -i 0 /dev/mapper/${LOOP_DEVICE}
+
+MOUNT_DIR=`mktemp -d -t build-debimg.XXXXXX`
+mount -o loop /dev/mapper/${LOOP_DEVICE} ${MOUNT_DIR}
+debootstrap --verbose \
+	--include=${PKG_LIST} \
+	${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
+
+############################
+### Customize the distro ###
+############################
+### Customize: access to the VM ###
+# # # # # # # # # # # # # # # # # #
+# Setup default root password to what has been set on the command line
+if [ -n "${ROOT_PASSWORD}" ] ; then
+	chroot ${MOUNT_DIR} sh -c "echo root:${ROOT_PASSWORD} | chpasswd"
+fi
+
+# Otherwise, we have a huge backdoor, since the root password
+# is always the same.
+sed -i "s/PermitRootLogin yes/PermitRootLogin without-password/" ${MOUNT_DIR}/etc/ssh/sshd_config
+cat >>${MOUNT_DIR}/etc/ssh/sshd_config <<EOF
+
+ClientAliveInterval 120
+EOF
+
+### Customize: misc stuff ###
+# # # # # # # # # # # # # # #
+# Setup fstab
+cat >${MOUNT_DIR}/etc/fstab <<EOF
+# /etc/fstab: static file system information.
+UUID=${UUID}	/	ext4	errors=remount-ro	0	1
+EOF
+chroot ${MOUNT_DIR} mount /proc || true
+
+# No clear for the tty1 console
+if [ "${RELEASE}" = "wheezy" ] ; then
+	sed -i "s#1:2345:respawn:/sbin/getty 38400 tty1#1:2345:respawn:/sbin/getty --noclear 38400 tty1#" ${MOUNT_DIR}/etc/inittab
+else
+	echo ForwardToConsole=yes >> ${MOUNT_DIR}/etc/systemd/journald.conf
+fi
+
+chroot ${MOUNT_DIR} apt-get install -y locales-all
+
+rm -f ${MOUNT_DIR}/etc/ssh/ssh_host_*
+
+# Setup networking (eg: DHCP by default)
+cat >${MOUNT_DIR}/etc/network/interfaces <<EOF
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The normal eth0
+auto eth0
+iface eth0 inet dhcp
+
+# Maybe the VM has 2 NICs?
+allow-hotplug eth1
+iface eth1 inet dhcp
+
+# Maybe the VM has 3 NICs?
+allow-hotplug eth2
+iface eth2 inet dhcp
+EOF
+
+# FIXME: DHCP RFC3442 is used incorrect in Azure
+sed -ie 's,rfc3442-classless-static-routes,disabled-\0,' $BODI_CHROOT_PATH/etc/dhcp/dhclient.conf
+
+# Setup the default hostname (will be set by cloud-init
+# at boot time anyway)
+echo "debian.example.com" >${MOUNT_DIR}/etc/hostname
+
+# This should be a correct default everywhere
+cat >${MOUNT_DIR}/etc/apt/sources.list <<EOF
+deb ${SOURCE_LIST_MIRROR} ${RELEASE} main
+deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main
+deb ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
+deb-src ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
+deb http://security.debian.org/ ${RELEASE}/updates main
+deb-src http://security.debian.org/ ${RELEASE}/updates main
+#deb ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
+#deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
+EOF
+
+if [ "${RELEASE}" = "wheezy" ] || [ "${RELEASE}" = "jessie" ]; then
+	cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
+deb ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
+deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
+deb ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
+deb-src ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
+EOF
+chroot ${MOUNT_DIR} apt-key add - <<EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1
+
+mQENBFYWcbkBCADKvo4KT/ic3wb4AoNFtWvoS1Ae3NFcvM/6WR/n9BTsayOlnjDu
+EFh7yH16nIhuO5pZFocY+32BWMEmiK6/0pkk1lB9+XfNB8yqDCJ/ItzADfuKQv6g
+smfx4tLa1Vj+jUbrgiIG7MYTCPlpkSuPA+FgntlR4JBxOy2g4fqqp3of+xM8tfSN
+4I7/g1989YU9EQN53c1HGLdsc5x5Y5Kezd46H4IK5oyri7BaG4zRzpJLYa4yxB2W
+re+HXP0a5SN/zQq1oq8pvkPubEBPKhdypZzzoHWPkZqXh1pHsMMNRkwsLW/3iwzE
+IjDKrbdILz3/b+iLLIvYo9RlTycRO0XeS/B3ABEBAAG0UkRlYmlhbiBmb3IgQXp1
+cmUgQXJjaGl2ZSBBdXRvbWF0aWMgU2lnbmluZyBLZXkgKDgvamVzc2llKSA8bWlj
+cm9zb2Z0QGNyZWRhdGl2LmNvbT6JAT4EEwECACgFAlYWcbkCGwMFCQPCZwAGCwkI
+BwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEAbqSemobK1/2c8H/1j4HK/izt7aw7Kk
+g+ChRDhltb4LiYTZNgHaBnLGkKewkA1vYIHQjdu/pVnJjh1JzvOBFV+rhJ4Cc60D
+s4JDqkrl8LpA4jsLb/PW1bRtbW92mPfhWgjyWs6S2tRBsBy1m2+SLZKeaDUq/PCD
+VnaClzDh2fQYimI8IQk5U/u8VHXtDm3qYQSq7dJMTTnDcBC1oCjEYN+uPm9M+tUI
+ik2hIE4VmjIXYTQVTa1lD+qyJvZ9hCsBUxAGllFpcWlyexN5orer6c+30XY/0Y4i
+Q+zzVPrp1s6MgM9F8ofgd2+MhL57fwyj2A+Tbyzm7xYhzPPMx/mopo4pi884+5lo
+FY6A20E=
+=X0jG
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
+fi
+
+chroot ${MOUNT_DIR} apt-get update
+chroot ${MOUNT_DIR} apt-get upgrade -y
+
+if [ "${RELEASE}" = "wheezy" ] ; then
+	cat > ${MOUNT_DIR}/etc/apt/preferences.d/linux.pref <<EOF
+Package: linux-image-amd64 initramfs-tools
+Pin: release n=wheezy-backports
+Pin-Priority: 500
+EOF
+fi
+
+chroot ${MOUNT_DIR} apt-get install -y linux-image-amd64
+
+unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install -y waagent
+
+# Setting-up initramfs
+chroot ${MOUNT_DIR} update-initramfs -u
+
+rm ${MOUNT_DIR}/var/cache/apt/archives/*.deb
+
+###########################
+### Setting-up extlinux ###
+###########################
+mkdir -p ${MOUNT_DIR}/boot/extlinux 
+if [ "${RELEASE}" = "wheezy" ] ; then
+  append="rootdelay=30"
+fi
+cat >${MOUNT_DIR}/boot/extlinux/extlinux.conf <<EOF
+default linux
+timeout 1
+label linux
+kernel /vmlinuz
+append initrd=/initrd.img root=UUID=${UUID} console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 $append
+EOF
+extlinux --install ${MOUNT_DIR}/boot/extlinux
+
+###################
+### HOOK SCRIPT ###
+###################
+if [ -x ${HOOK_SCRIPT} ] ; then
+	export BODI_CHROOT_PATH=${MOUNT_DIR}
+	export BODI_RELEASE=${RELEASE}
+	${HOOK_SCRIPT}
+fi
+
+##########################
+### Unmount everything ###
+##########################
+
+cleanup(){
+	# refine cleanup everything was ok
+	echo "Finished."
+} 
+
+sync
+chroot ${MOUNT_DIR} umount /proc || true
+umount ${MOUNT_DIR}
+
+sync
+sleep 1
+kpartx -d ${RAW_NAME}
+rmdir ${MOUNT_DIR}
