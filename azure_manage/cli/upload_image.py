@@ -2,43 +2,35 @@
 # Copyright: 2015 Bastian Blank
 # License: MIT, see LICENSE.txt for details.
 
-import argparse
+from ..blobservice import BlobService
+from ..config import Config
+from ..progress import ProgressOutput
+from ..servicemanagementservice import ServiceManagementService
+from . import CliBase, setup_argparse
 
-from azure_manage.blobservice import BlobService
-from azure_manage.config import Config
-from azure_manage.progress import ProgressOutput
-from azure_manage.servicemanagementservice import ServiceManagementService
 
-
-class Main:
-    parser = argparse.ArgumentParser(description='Upload image')
-    parser.add_argument('--auto', action='store_true')
-    parser.add_argument('--config', metavar='CONFIG', default=None)
-    parser.add_argument('section', metavar='SECTION')
-    parser.add_argument('version', metavar='VERSION')
+class Cli(CliBase):
+    parser = setup_argparse(description='Upload image')
 
     def __init__(self):
-        args = self.parser.parse_args()
+        super().__init__()
 
-        with open(args.config) as c:
-            config_section = Config(c)[args.section]
-
-        if args.auto and not config_section.get('image_auto_upload'):
+        if self.args.auto and not self.config_section.get('image_auto_upload'):
             print('Automatic mode and no automatic upload allowed, ignoring')
             sys.exit(0)
 
-        self.image_name = config_section['image_name'].format_map(vars(args))
-        self.image_label = config_section.get('image_label', self.image_name)
-        self.image_meta = config_section['image_meta']
+        self.image_name = self.config_section['image_name'].format_map(vars(self.args))
+        self.image_label = self.config_section.get('image_label', self.image_name)
+        self.image_meta = self.config_section['image_meta']
         self.image_filename = self.image_name + '.raw'
 
-        self.storage_account = config_section['storage_account']
-        self.storage_container = config_section['storage_container']
-        self.storage_key = config_section['storage_key']
+        self.storage_account = self.config_section['storage_account']
+        self.storage_container = self.config_section['storage_container']
+        self.storage_key = self.config_section['storage_key']
         self.storage_name = self.image_name + '.vhd'
 
-        self.subscription = config_section['subscription']
-        self.subscription_keyfile = config_section['subscription_keyfile']
+        self.subscription = self.config_section['subscription']
+        self.subscription_keyfile = self.config_section['subscription_keyfile']
 
     def __call__(self):
         with ProgressOutput() as progress_stream:
@@ -61,4 +53,8 @@ class Main:
 
 
 def main():
-    Main()()
+    Cli()()
+
+
+if __name__ == '__main__':
+    main()
