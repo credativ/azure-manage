@@ -28,7 +28,6 @@ class Cli(CliBase):
         subprocess.check_call(
             (
                 'sudo',
-                'unshare', '--mount', '--pid', '--fork', '--mount-proc',
                 os.path.join(self.args.bindir, 'azure_build_image_debian'),
                 '--release', self.release,
                 '--output', os.path.join(workdir, 'image'),
