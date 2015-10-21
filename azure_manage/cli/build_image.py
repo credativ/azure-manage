@@ -28,7 +28,7 @@ class Main:
         self.image_name = config_section['image_name'].format_map(vars(args))
 
     def __call__(self):
-        os.umask(022)
+        os.umask(0o22)
         subprocess.check_call(
             (
                 'sudo',
