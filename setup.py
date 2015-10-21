@@ -16,4 +16,8 @@ setup(
         'azure_build_image_debian',
         'azure_extract_publishsettings',
     ],
+    install_requires=[
+        'azure-servicemanagement-legacy',
+        'azure-storage',
+    ],
 )
