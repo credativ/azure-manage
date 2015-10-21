@@ -1,3 +1,6 @@
 __pycache__
 *.pyc
 *.pyo
+/build
+/dist
+/azure_manage.egg-info/
