@@ -58,3 +58,7 @@ class Main:
         servicemanager.add_os_image(self.image_label, self.storage_url, self.image_name, 'Linux', **self.image_meta)
         print('Finished register image')
         progress_stream.write_progress('')
+
+
+def main():
+    Main()()
