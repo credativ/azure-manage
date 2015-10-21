@@ -8,12 +8,12 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'build_image = azure_manage.cli.build_image:main',
-            'upload_image = azure_manage.cli.upload_image:main',
+            'azure_build_image = azure_manage.cli.build_image:main',
+            'azure_upload_image = azure_manage.cli.upload_image:main',
         ]
     },
     scripts=[
-        'build_image_debian_azure',
-        'extract_publishsettings',
+        'azure_build_image_debian',
+        'azure_extract_publishsettings',
     ],
 )

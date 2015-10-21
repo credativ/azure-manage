@@ -34,7 +34,7 @@ class Main:
             (
                 'sudo',
                 'unshare', '--mount', '--pid', '--fork', '--mount-proc',
-                os.path.join(self.bindir, 'build_image_debian_azure'),
+                os.path.join(self.bindir, 'azure_build_image_debian'),
                 '--release', self.release,
                 '--output', self.image_name,
                 '--debootstrap-url', 'http://debian-archive.trafficmanager.net/debian',
