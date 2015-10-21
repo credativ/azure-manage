@@ -26,7 +26,6 @@ class Cli(CliBase):
 
         self.storage_account = self.config_section['storage_account']
         self.storage_container = self.config_section['storage_container']
-        self.storage_key = self.config_section['storage_key']
         self.storage_name = self.image_name + '.vhd'
 
         self.subscription = self.config_section['subscription']
@@ -34,19 +33,23 @@ class Cli(CliBase):
 
     def __call__(self):
         with ProgressOutput() as progress_stream:
-            self.do_upload(progress_stream)
-            self.do_register(progress_stream)
+            servicemanager = ServiceManagementService(self.subscription, self.subscription_keyfile)
+            self.do_upload(servicemanager, progress_stream)
+            self.do_register(servicemanager, progress_stream)
 
-    def do_upload(self, progress_stream):
+    def do_upload(self, servicemanager, progress_stream):
+        print('Looking up storage {}'.format(self.storage_account))
+        storage = servicemanager.get_storage_account_keys(self.storage_account)
+        storage_key = storage.storage_service_keys.primary
+
         print('Upload image {}/{}/{}'.format(self.storage_account, self.storage_container, self.storage_name))
-        blob = BlobService(self.storage_account, self.storage_key)
+        blob = BlobService(self.storage_account, storage_key)
         self.storage_url = blob.put_rawimage_from_path(self.storage_container, self.storage_name, self.image_filename, progress_stream)
         print('Finished upload image {}'.format(self.storage_url))
 
-    def do_register(self, progress_stream):
+    def do_register(self, servicemanager, progress_stream):
         print('Register image {} ({})'.format(self.image_name, self.image_label))
         progress_stream.write_progress('Register image')
-        servicemanager = ServiceManagementService(self.subscription, self.subscription_keyfile)
         servicemanager.add_os_image(self.image_label, self.storage_url, self.image_name, 'Linux', **self.image_meta)
         print('Finished register image')
         progress_stream.write_progress('')

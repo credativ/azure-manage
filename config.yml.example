@@ -2,7 +2,6 @@
 default: &DEFAULT
   storage_account: ''
   storage_container: ''
-  storage_key: ''
   subscription: ''
   subscription_keyfile: ''
 
