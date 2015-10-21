@@ -11,6 +11,7 @@ def setup_argparse(description):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--auto', action='store_true')
     parser.add_argument('--config', metavar='CONFIG', default=None)
+    parser.add_argument('--workdir', metavar='WORKDIR', help='working directory (default: ./SECTION-VERSION)')
     parser.add_argument('section', metavar='SECTION')
     parser.add_argument('version', metavar='VERSION')
     return parser
@@ -22,3 +23,7 @@ class CliBase:
 
         with open(self.args.config) as c:
             self.config_section = Config(c)[self.args.section]
+
+    @property
+    def workdir(self):
+        return self.args.workdir or './{section}-{version}'.format_map(vars(self.args))

@@ -21,13 +21,17 @@ class Cli(CliBase):
 
     def __call__(self):
         os.umask(0o22)
+        workdir = self.workdir
+        if not os.path.isdir(workdir):
+            os.makedirs(workdir)
+
         subprocess.check_call(
             (
                 'sudo',
                 'unshare', '--mount', '--pid', '--fork', '--mount-proc',
                 os.path.join(self.args.bindir, 'azure_build_image_debian'),
                 '--release', self.release,
-                '--output', self.image_name,
+                '--output', os.path.join(workdir, 'image'),
                 '--debootstrap-url', 'http://debian-archive.trafficmanager.net/debian',
             ),
         )

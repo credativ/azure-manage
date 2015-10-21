@@ -2,6 +2,8 @@
 # Copyright: 2015 Bastian Blank
 # License: MIT, see LICENSE.txt for details.
 
+import os
+
 from ..blobservice import BlobService
 from ..config import Config
 from ..progress import ProgressOutput
@@ -22,7 +24,6 @@ class Cli(CliBase):
         self.image_name = self.config_section['image_name'].format_map(vars(self.args))
         self.image_label = self.config_section.get('image_label', self.image_name)
         self.image_meta = self.config_section['image_meta']
-        self.image_filename = self.image_name + '.raw'
 
         self.storage_account = self.config_section['storage_account']
         self.storage_container = self.config_section['storage_container']
@@ -42,9 +43,11 @@ class Cli(CliBase):
         storage = servicemanager.get_storage_account_keys(self.storage_account)
         storage_key = storage.storage_service_keys.primary
 
+        image_filename = os.path.join(self.workdir, 'image.raw')
+
         print('Upload image {}/{}/{}'.format(self.storage_account, self.storage_container, self.storage_name))
         blob = BlobService(self.storage_account, storage_key)
-        self.storage_url = blob.put_rawimage_from_path(self.storage_container, self.storage_name, self.image_filename, progress_stream)
+        self.storage_url = blob.put_rawimage_from_path(self.storage_container, self.storage_name, image_filename, progress_stream)
         print('Finished upload image {}'.format(self.storage_url))
 
     def do_register(self, servicemanager, progress_stream):
