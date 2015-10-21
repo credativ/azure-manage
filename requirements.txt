@@ -1,2 +1,3 @@
 azure-servicemanagement-legacy
 azure-storage
+pyyaml

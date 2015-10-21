@@ -19,5 +19,6 @@ setup(
     install_requires=[
         'azure-servicemanagement-legacy',
         'azure-storage',
+        'pyyaml',
     ],
 )
