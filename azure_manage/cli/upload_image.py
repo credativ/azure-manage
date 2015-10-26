@@ -17,10 +17,6 @@ class Cli(CliBase):
     def __init__(self):
         super().__init__()
 
-        if self.args.auto and not self.config_section.get('image_auto_upload'):
-            print('Automatic mode and no automatic upload allowed, ignoring')
-            sys.exit(0)
-
         self.image_prefix = self.config_get_expand('image_prefix')
         self.image_filename = os.path.join(self.workdir, self.image_prefix + '.raw')
         self.image_name = self.config_get_expand('image_name')

@@ -19,7 +19,6 @@ class ArgsActionDict(argparse.Action):
 
 def setup_argparse(description):
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--auto', action='store_true')
     parser.add_argument('--config', metavar='CONFIG', default=None)
     parser.add_argument('--option', metavar='OPTION=VALUE', dest='options',
             default={}, action=ArgsActionDict)

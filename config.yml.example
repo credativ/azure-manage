@@ -26,6 +26,5 @@ stretch:
   release: stretch
   image_label: 'Debian 9 "Stretch"'
   image_name: Debian-9_DAILY-amd64-{image_timestamp}
-  image_auto_upload: true
   image_meta:
     image_family: 'Debian 9'
