@@ -9,7 +9,7 @@ wheezy:
   <<: *DEFAULT
   release: wheezy
   image_label: 'Debian 7 "Wheezy"'
-  image_name: Debian-7-amd64-{version}
+  image_name: Debian-7-amd64-{image_timestamp}
   image_meta:
     image_family: 'Debian 7'
 
@@ -17,7 +17,7 @@ jessie:
   <<: *DEFAULT
   release: jessie
   image_label: 'Debian 8 "Jessie"'
-  image_name: Debian-8-amd64-{version}
+  image_name: Debian-8-amd64-{image_timestamp}
   image_meta:
     image_family: 'Debian 8'
 
@@ -25,7 +25,7 @@ stretch:
   <<: *DEFAULT
   release: stretch
   image_label: 'Debian 9 "Stretch"'
-  image_name: Debian-9_DAILY-amd64-{version}
+  image_name: Debian-9_DAILY-amd64-{image_timestamp}
   image_auto_upload: true
   image_meta:
     image_family: 'Debian 9'

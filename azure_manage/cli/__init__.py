@@ -26,7 +26,6 @@ def setup_argparse(description):
     parser.add_argument('--workdir', metavar='WORKDIR', default='.',
             help='working directory (default: .')
     parser.add_argument('section', metavar='SECTION')
-    parser.add_argument('version', metavar='VERSION')
     return parser
 
 
@@ -43,8 +42,6 @@ class CliBase:
             self.config_section = {}
 
         self.config_section.update(self.args.options)
-        # TODO: Remove as mandatory argument
-        self.config_section['version'] = self.args.version
 
     def config_get_expand(self, key):
         return self.config_section[key].format_map(self.config_section)
