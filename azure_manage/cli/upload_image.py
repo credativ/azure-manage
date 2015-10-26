@@ -21,13 +21,15 @@ class Cli(CliBase):
             print('Automatic mode and no automatic upload allowed, ignoring')
             sys.exit(0)
 
-        self.image_name = self.config_section['image_name'].format_map(vars(self.args))
+        self.image_prefix = self.config_get_expand('image_prefix')
+        self.image_filename = os.path.join(self.workdir, self.image_prefix + '.raw')
+        self.image_name = self.config_get_expand('image_name')
         self.image_label = self.config_section.get('image_label', self.image_name)
         self.image_meta = self.config_section['image_meta']
 
         self.storage_account = self.config_section['storage_account']
         self.storage_container = self.config_section['storage_container']
-        self.storage_name = self.image_name + '.vhd'
+        self.storage_name = self.image_prefix + '.vhd'
 
         self.subscription = self.config_section['subscription']
         self.subscription_keyfile = self.config_section['subscription_keyfile']
@@ -43,11 +45,9 @@ class Cli(CliBase):
         storage = servicemanager.get_storage_account_keys(self.storage_account)
         storage_key = storage.storage_service_keys.primary
 
-        image_filename = os.path.join(self.workdir, 'image.raw')
-
         print('Upload image {}/{}/{}'.format(self.storage_account, self.storage_container, self.storage_name))
         blob = BlobService(self.storage_account, storage_key)
-        self.storage_url = blob.put_rawimage_from_path(self.storage_container, self.storage_name, image_filename, progress_stream)
+        self.storage_url = blob.put_rawimage_from_path(self.storage_container, self.storage_name, self.image_filename, progress_stream)
         print('Finished upload image {}'.format(self.storage_url))
 
     def do_register(self, servicemanager, progress_stream):

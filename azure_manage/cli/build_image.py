@@ -16,8 +16,9 @@ class Cli(CliBase):
     def __init__(self):
         super().__init__()
 
-        self.release = self.config_section['release']
-        self.image_name = self.config_section['image_name'].format_map(vars(self.args))
+        self.release = self.config_get_expand('release')
+        self.image_prefix = self.config_get_expand('image_prefix')
+        self.image_name = self.config_get_expand('image_name')
 
     def __call__(self):
         os.umask(0o22)
@@ -30,7 +31,7 @@ class Cli(CliBase):
                 'sudo',
                 os.path.join(self.args.bindir, 'azure_build_image_debian'),
                 '--release', self.release,
-                '--output', os.path.join(workdir, 'image'),
+                '--output', os.path.join(workdir, self.image_prefix),
                 '--debootstrap-url', 'http://debian-archive.trafficmanager.net/debian',
             ),
         )
