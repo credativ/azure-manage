@@ -33,11 +33,16 @@ def setup_argparse(description):
 class CliBase:
     parser = setup_argparse(description='Base')
 
-    def __init__(self):
-        self.args = self.parser.parse_args()
+    def __init__(self, args=None):
+        self.args = self.parser.parse_args(args)
 
-        with open(self.args.config) as c:
-            self.config_section = Config(c)[self.args.section]
+        if self.args.config:
+            with open(self.args.config) as c:
+                self.config_section = Config(c)[self.args.section]
+        else:
+            self.config_section = {}
+
+        self.config_section.update(self.args.options)
 
     @property
     def workdir(self):
