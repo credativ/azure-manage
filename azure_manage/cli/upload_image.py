@@ -17,11 +17,11 @@ class Cli(CliBase):
     def __init__(self):
         super().__init__()
 
-        self.image_prefix = self.config_get_expand('image_prefix')
+        self.image_prefix = self.config_get('image_prefix')
         self.image_filename = os.path.join(self.workdir, self.image_prefix + '.raw')
-        self.image_name = self.config_get_expand('image_name')
+        self.image_name = self.config_get('image_name')
         self.image_label = self.config_section.get('image_label', self.image_name)
-        self.image_meta = self.config_section['image_meta']
+        self.image_meta = self.config_get('image_meta')
 
         self.storage_account = self.config_section['storage_account']
         self.storage_container = self.config_section['storage_container']

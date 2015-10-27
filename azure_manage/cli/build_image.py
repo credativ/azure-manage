@@ -16,9 +16,9 @@ class Cli(CliBase):
     def __init__(self):
         super().__init__()
 
-        self.release = self.config_get_expand('release')
-        self.image_prefix = self.config_get_expand('image_prefix')
-        self.image_name = self.config_get_expand('image_name')
+        self.release = self.config_get('release')
+        self.image_prefix = self.config_get('image_prefix')
+        self.image_name = self.config_get('image_name')
 
     def __call__(self):
         os.umask(0o22)

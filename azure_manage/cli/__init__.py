@@ -54,7 +54,7 @@ class CliBase:
         else:
             return item
 
-    def config_get_expand(self, key, default=__marker):
+    def config_get(self, key, default=__marker):
         config = self.config_section
         if default is self.__marker:
             value = config[key]
