@@ -43,7 +43,17 @@ class CliBase:
         self.config_section.update(self.args.options)
 
     def config_get_expand(self, key):
-        return self.config_section[key].format_map(self.config_section)
+        config = self.config_section
+        def expand(item):
+            if isinstance(item, str):
+                return item.format_map(config)
+            elif isinstance(item, list):
+                return [expand(v) for v in item]
+            elif isinstance(item, dict):
+                return {k: expand(v) for k, v in item.items()}
+            else:
+                return item
+        return expand(config[key])
 
     @property
     def workdir(self):
