@@ -1,3 +1,5 @@
+import pytest
+
 from . import CliBase
 
 
@@ -19,6 +21,12 @@ def test_CliBase_config_get_expand():
     assert cli.config_get_expand('expand-str') == 'bla-value'
     assert cli.config_get_expand('expand-list') == ['bla-value']
     assert cli.config_get_expand('expand-dict') == {'key': 'bla-value'}
+
+    with pytest.raises(KeyError):
+        cli.config_get_expand('nonexistant')
+
+    assert cli.config_get_expand('nonexistant', None) is None
+    assert cli.config_get_expand('nonexistant', 'default') == 'default'
 
 def test_CliBase_parser():
     parser = CliBase.parser

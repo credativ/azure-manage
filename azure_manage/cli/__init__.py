@@ -29,6 +29,8 @@ def setup_argparse(description):
 
 
 class CliBase:
+    __marker = object()
+
     parser = setup_argparse(description='Base')
 
     def __init__(self, args=None):
@@ -42,18 +44,23 @@ class CliBase:
 
         self.config_section.update(self.args.options)
 
-    def config_get_expand(self, key):
+    def __config_expand(self, item):
+        if isinstance(item, str):
+            return item.format_map(self.config_section)
+        elif isinstance(item, list):
+            return [self.__config_expand(v) for v in item]
+        elif isinstance(item, dict):
+            return {k: self.__config_expand(v) for k, v in item.items()}
+        else:
+            return item
+
+    def config_get_expand(self, key, default=__marker):
         config = self.config_section
-        def expand(item):
-            if isinstance(item, str):
-                return item.format_map(config)
-            elif isinstance(item, list):
-                return [expand(v) for v in item]
-            elif isinstance(item, dict):
-                return {k: expand(v) for k, v in item.items()}
-            else:
-                return item
-        return expand(config[key])
+        if default is self.__marker:
+            value = config[key]
+        else:
+            value = config.get(key, default)
+        return self.__config_expand(value)
 
     @property
     def workdir(self):
