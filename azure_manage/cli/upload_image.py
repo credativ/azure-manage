@@ -20,15 +20,15 @@ class Cli(CliBase):
         self.image_prefix = self.config_get('image_prefix')
         self.image_filename = os.path.join(self.workdir, self.image_prefix + '.raw')
         self.image_name = self.config_get('image_name')
-        self.image_label = self.config_section.get('image_label', self.image_name)
+        self.image_label = self.config_get('image_label', self.image_name)
         self.image_meta = self.config_get('image_meta')
 
-        self.storage_account = self.config_section['storage_account']
-        self.storage_container = self.config_section['storage_container']
+        self.storage_account = self.config_get('storage_account')
+        self.storage_container = self.config_get('storage_container')
         self.storage_name = self.image_prefix + '.vhd'
 
-        self.subscription = self.config_section['subscription']
-        self.subscription_keyfile = self.config_section['subscription_keyfile']
+        self.subscription = self.config_get('subscription')
+        self.subscription_keyfile = self.config_get('subscription_keyfile')
 
     def __call__(self):
         with ProgressOutput() as progress_stream:
