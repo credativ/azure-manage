@@ -25,7 +25,7 @@ class Cli(CliBase):
 
         self.storage_account = self.config_get('storage_account')
         self.storage_container = self.config_get('storage_container')
-        self.storage_name = self.image_prefix + '.vhd'
+        self.storage_name = self.image_name + '.vhd'
 
         self.subscription = self.config_get('subscription')
         self.subscription_keyfile = self.config_get('subscription_keyfile')
