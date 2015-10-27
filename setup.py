@@ -9,6 +9,7 @@ setup(
     entry_points={
         'console_scripts': [
             'azure_build_image = azure_manage.cli.build_image:main',
+            'azure_delete_image = azure_manage.cli.delete_image:main',
             'azure_list_images = azure_manage.cli.list_images:main',
             'azure_upload_image = azure_manage.cli.upload_image:main',
         ]
