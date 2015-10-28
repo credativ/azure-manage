@@ -21,7 +21,7 @@ class Cli(CliBase):
         self.image_filename = os.path.join(self.workdir, self.image_prefix + '.raw')
         self.image_name = self.config_get('image_name')
         self.image_label = self.config_get('image_label', self.image_name)
-        self.image_meta = self.config_get('image_meta')
+        self.image_meta = self.config_get('image_meta', {})
 
         self.storage_account = self.config_get('storage_account')
         self.storage_container = self.config_get('storage_container')
