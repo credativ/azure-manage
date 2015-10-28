@@ -175,9 +175,9 @@ fi
 
 NEEDED_PACKAGES=sudo,locales,extlinux,openssh-server,file
 if [ "${RELEASE}" = "wheezy" ] ; then
-	NEEDED_PACKAGES=${NEEDED_PACKAGES},acpid,acpi-support-base
+	NEEDED_PACKAGES=${NEEDED_PACKAGES},acpid,acpi-support-base,ntp,unscd
 else
-	NEEDED_PACKAGES=${NEEDED_PACKAGES},dbus,libpam-systemd
+	NEEDED_PACKAGES=${NEEDED_PACKAGES},dbus,libpam-systemd,ntp,unscd
 fi
 
 if [ ${EXTRA} = "no" ] ; then
