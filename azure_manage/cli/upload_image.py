@@ -2,7 +2,9 @@
 # Copyright: 2015 Bastian Blank
 # License: MIT, see LICENSE.txt for details.
 
+import lzma
 import os
+import yaml
 
 from ..blobservice import BlobService
 from ..config import Config
@@ -18,7 +20,7 @@ class Cli(CliBase):
         super().__init__()
 
         self.image_prefix = self.config_get('image_prefix')
-        self.image_filename = os.path.join(self.workdir, self.image_prefix + '.raw')
+        self.image_filename_prefix = os.path.join(self.workdir, self.image_prefix)
         self.image_name = self.config_get('image_name')
         self.image_label = self.config_get('image_label', self.image_name)
         self.image_meta = self.config_get('image_meta', {})
@@ -41,9 +43,19 @@ class Cli(CliBase):
         storage = servicemanager.get_storage_account_keys(self.storage_account)
         storage_key = storage.storage_service_keys.primary
 
+        with open(self.image_filename_prefix + '.yaml') as f:
+            meta = yaml.safe_load(f)
+            image_size = meta['image_size_gb'] * 1024 * 1024 * 1024
+
+        try:
+            image_file = open(self.image_filename_prefix + '.raw', 'rb')
+        except FileNotFoundError:
+            print('Uncompressed image not found, try .xz compressed one')
+            image_file = lzma.open(self.image_filename_prefix + '.raw.xz', 'rb')
+
         print('Upload image {}/{}/{}'.format(self.storage_account, self.storage_container, self.storage_name))
         blob = BlobService(self.storage_account, storage_key)
-        self.storage_url = blob.put_rawimage_from_path(self.storage_container, self.storage_name, self.image_filename, progress_stream)
+        self.storage_url = blob.put_rawimage_from_file(self.storage_container, self.storage_name, image_size, image_file, progress_stream)
         print('Finished upload image {}'.format(self.storage_url))
 
     def do_register(self, servicemanager, progress_stream):

@@ -11,9 +11,8 @@ from .vhd import VHDFooter
 
 
 class BlobService(BlobServiceBase):
-    def put_rawimage_from_path(self, container_name, blob_name, file_path, progress_stream):
-        size_image = os.path.getsize(file_path)
-        size_complete = size_image + VHDFooter.size
+    def put_rawimage_from_file(self, container_name, blob_name, size, stream, progress_stream):
+        size_complete = size + VHDFooter.size
 
         self.put_blob(
             container_name,
@@ -29,10 +28,9 @@ class BlobService(BlobServiceBase):
             blob_name,
         )
 
-        with open(file_path, 'rb') as stream:
-            uploader(size_image, stream, progress_stream)
+        uploader(size, stream, progress_stream)
 
-        footer = VHDFooter(size_image)
-        uploader.upload_chunk(size_image, footer.pack())
+        footer = VHDFooter(size)
+        uploader.upload_chunk(size, footer.pack())
 
         return 'https://{}/{}/{}'.format(self._get_host(), container_name, blob_name)
