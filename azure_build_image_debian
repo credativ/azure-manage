@@ -1,4 +1,8 @@
 #!/bin/sh
+# Copyright:
+#   2013 Thomas Goirand <zigo@debian.org>
+#   2015 Bastian Blank
+# License: Apache 2.0, see LICENSE.txt for details.
 
 set -e
 
