@@ -280,6 +280,7 @@ else
 	# XXX: the serial port on Microsoft Azure plattform can't cope with
 	# lots of data, keep this option disabled.
 	#echo ForwardToConsole=yes >> ${MOUNT_DIR}/etc/systemd/journald.conf
+	:
 fi
 
 chroot ${MOUNT_DIR} apt-get install -y locales-all
