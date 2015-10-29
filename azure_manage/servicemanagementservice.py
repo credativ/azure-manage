@@ -43,3 +43,9 @@ class ServiceManagementService(ServiceManagementServiceBase):
             self._get_image_path(),
             _serialize_os_image_to_xml(*args, **kw),
             async=True)
+
+    def update_os_image(self, image_name, *args, **kw):
+        return self._perform_put(
+            self._get_image_path(image_name),
+            _serialize_os_image_to_xml(*args, **kw),
+            async=True)
