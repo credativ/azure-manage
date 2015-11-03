@@ -213,8 +213,9 @@ install-mbr ${RAW_NAME}
 RESULT_KPARTX=`kpartx -asv ${RAW_NAME} 2>&1`
 
 if echo "${RESULT_KPARTX}" | grep "^add map" ; then
-	LOOP_DEVICE=`echo ${RESULT_KPARTX} | cut -d" " -f3`
-	echo "kpartx mounted using: ${LOOP_DEVICE}"
+	LOOP_DEVICE=$(echo ${RESULT_KPARTX} | cut -d" " -f3)
+	LOOPRAW_DEVICE=${LOOP_DEVICE%p*}
+	echo "kpartx mounted using: ${LOOP_DEVICE} via ${LOOPRAW_DEVICE}"
 else
 	echo "It seems kpartx didn't mount the image correctly: exiting."
 	exit 1
@@ -223,13 +224,18 @@ fi
 cleanup(){
 	error=$?
 	[ ! -d "${MOUNT_DIR}" ] && return
-	echo
-	echo "error $error, umounting $MOUNT_DIR"
-	chroot ${MOUNT_DIR} umount /proc || true
-	chroot ${MOUNT_DIR} umount /sys || true
-	umount ${MOUNT_DIR}
-	rmdir ${MOUNT_DIR}
-	kpartx -d ${RAW_NAME}
+	if [ "$error" -gt 0 ]; then
+		echo
+		echo "Error $error"
+	else
+		echo "Finished."
+	fi
+
+	sync
+	umount -l ${MOUNT_DIR}
+
+	dmsetup remove --deferred ${LOOP_DEVICE}
+	losetup -d /dev/${LOOPRAW_DEVICE}
 	exit $error
 }
 trap "cleanup" EXIT TERM INT
@@ -241,7 +247,7 @@ UUID=$(blkid -o value -s UUID /dev/mapper/${LOOP_DEVICE})
 tune2fs -i 0 /dev/mapper/${LOOP_DEVICE}
 
 MOUNT_DIR=`mktemp -d -t build-debimg.XXXXXX`
-mount -o loop /dev/mapper/${LOOP_DEVICE} ${MOUNT_DIR}
+mount /dev/mapper/${LOOP_DEVICE} ${MOUNT_DIR}
 debootstrap --verbose \
 	--include=${PKG_LIST} \
 	${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
@@ -403,21 +409,3 @@ if [ -x ${HOOK_SCRIPT} ] ; then
 	export BODI_RELEASE=${RELEASE}
 	${HOOK_SCRIPT}
 fi
-
-##########################
-### Unmount everything ###
-##########################
-
-cleanup(){
-	# refine cleanup everything was ok
-	echo "Finished."
-} 
-
-sync
-chroot ${MOUNT_DIR} umount /proc || true
-umount ${MOUNT_DIR}
-
-sync
-sleep 1
-kpartx -d ${RAW_NAME}
-rmdir ${MOUNT_DIR}
