@@ -363,6 +363,10 @@ FY6A20E=
 =X0jG
 -----END PGP PUBLIC KEY BLOCK-----
 EOF
+chroot ${MOUNT_DIR} apt-get update
+chroot ${MOUNT_DIR} apt-get install -y debian-azure-archive-keyring
+rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg
+rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg~
 fi
 
 chroot ${MOUNT_DIR} apt-get update
