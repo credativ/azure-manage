@@ -45,17 +45,17 @@ class Cli(CliBase):
 
         with open(self.image_filename_prefix + '.yaml') as f:
             meta = yaml.safe_load(f)
-            image_size = meta['image_size_gb'] * 1024 * 1024 * 1024
+            image_size = meta['image_size']
 
         try:
-            image_file = open(self.image_filename_prefix + '.raw', 'rb')
+            image_file = open(self.image_filename_prefix + '.vhd', 'rb')
         except FileNotFoundError:
             print('Uncompressed image not found, try .xz compressed one')
-            image_file = lzma.open(self.image_filename_prefix + '.raw.xz', 'rb')
+            image_file = lzma.open(self.image_filename_prefix + '.vhd.xz', 'rb')
 
         print('Upload image {}/{}/{}'.format(self.storage_account, self.storage_container, self.storage_name))
         blob = BlobService(self.storage_account, storage_key)
-        self.storage_url = blob.put_rawimage_from_file(self.storage_container, self.storage_name, image_size, image_file, progress_stream)
+        self.storage_url = blob.put_image_from_file(self.storage_container, self.storage_name, image_size, image_file, progress_stream)
         print('Finished upload image {}'.format(self.storage_url))
 
     def do_register(self, servicemanager, progress_stream):
