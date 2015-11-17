@@ -2,12 +2,15 @@
 # Copyright: 2015 Bastian Blank
 # License: MIT, see LICENSE.txt for details.
 
+import base64
+import hashlib
 import os
 import subprocess
 import sys
 import yaml
 
 from . import CliBase, setup_argparse
+from ..progress import ProgressMeter, ProgressOutput
 from ..vhd import VHDFooter
 
 
@@ -23,6 +26,10 @@ class Cli(CliBase):
         self.image_size_gb = self.config_get('image_size_gb')
 
     def __call__(self):
+        with ProgressOutput() as progress_stream:
+            self.do_build(progress_stream)
+
+    def do_build(self, progress_stream):
         workdir = self.workdir
 
         filename_image = os.path.join(workdir, '{}.vhd'.format(self.config_get('image_prefix')))
@@ -53,9 +60,23 @@ class Cli(CliBase):
             footer = VHDFooter(image_size)
             f.write(footer.pack())
 
+            with ProgressMeter(progress_stream, image_size // (1024 * 1024)) as progress:
+                f.seek(0)
+                hash_sha512 = hashlib.new('sha512')
+                index = 0
+                while index < image_size_complete:
+                    i = f.read(1024 * 1024)
+                    hash_sha512.update(i)
+                    index += 1024 * 1024
+                    progress.set(index // (1024 * 1024))
+                image_digest_sha512 = hash_sha512.digest()
+
         with open(filename_meta, 'w') as f:
             yaml.safe_dump({
                 'image_prefix': self.image_prefix,
+                'image_digests': {
+                    'SHA512': base64.b64encode(image_digest_sha512).decode('ascii'),
+                },
                 'image_size': image_size_complete,
             }, f)
 
