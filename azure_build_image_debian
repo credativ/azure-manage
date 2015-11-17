@@ -193,9 +193,6 @@ if ! [ `whoami` = "root" ] ; then
 	echo "You have to be root to run this script"
 	exit 1
 fi
-RAW_NAME=${OUTPUT}.raw
-VHD_NAME=${OUTPUT}.vhd
-rm -f ${RAW_NAME}
 
 set -x
 
@@ -203,14 +200,13 @@ set -x
 ### Prepare the HDD (format, ext.) ###
 ######################################
 PARTED=/sbin/parted
-rm -f $RAW_NAME
-qemu-img create ${RAW_NAME} ${IMAGE_SIZE}G
+qemu-img create ${OUTPUT} ${IMAGE_SIZE}G
 
-${PARTED} -s ${RAW_NAME} mktable msdos
-${PARTED} -s -a optimal ${RAW_NAME} mkpart primary ext4 1Mi 100%
-${PARTED} -s ${RAW_NAME} set 1 boot on
-install-mbr ${RAW_NAME}
-RESULT_KPARTX=`kpartx -asv ${RAW_NAME} 2>&1`
+${PARTED} -s ${OUTPUT} mktable msdos
+${PARTED} -s -a optimal ${OUTPUT} mkpart primary ext4 1Mi 100%
+${PARTED} -s ${OUTPUT} set 1 boot on
+install-mbr ${OUTPUT}
+RESULT_KPARTX=`kpartx -asv ${OUTPUT} 2>&1`
 
 if echo "${RESULT_KPARTX}" | grep "^add map" ; then
 	LOOP_DEVICE=$(echo ${RESULT_KPARTX} | cut -d" " -f3)

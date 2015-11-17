@@ -32,7 +32,7 @@ class Cli(CliBase):
                 'sudo',
                 os.path.join(self.args.bindir, 'azure_build_image_debian'),
                 '--release', self.release,
-                '--output', os.path.join(workdir, self.image_prefix),
+                '--output', os.path.join(workdir, '{}.raw'.format(self.image_prefix)),
                 '--debootstrap-url', 'http://debian-archive.trafficmanager.net/debian',
                 '--image-size', str(self.image_size_gb),
             ),
