@@ -23,7 +23,7 @@ class BlobChunkUploader(object):
     def process_chunk(self, chunk_offset, size, stream):
         s = min(self.chunk_size, size - chunk_offset)
         chunk_data = stream.read(s)
-        if chunk_data.strip(b'\0'):
+        if chunk_data.count(0) != len(chunk_data):
             self.upload_chunk_with_retries(chunk_offset, chunk_data)
 
     def upload_chunk_with_retries(self, chunk_offset, chunk_data):
