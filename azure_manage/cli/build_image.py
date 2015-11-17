@@ -3,6 +3,7 @@
 # License: MIT, see LICENSE.txt for details.
 
 import base64
+import binascii
 import hashlib
 import os
 import subprocess
@@ -60,6 +61,8 @@ class Cli(CliBase):
             footer = VHDFooter(image_size)
             f.write(footer.pack())
 
+            print('Calculating digest...')
+
             with ProgressMeter(progress_stream, image_size // (1024 * 1024)) as progress:
                 f.seek(0)
                 hash_sha512 = hashlib.new('sha512')
@@ -71,11 +74,19 @@ class Cli(CliBase):
                     progress.set(index // (1024 * 1024))
                 image_digest_sha512 = hash_sha512.digest()
 
+            image_digest_sha256_base64 = base64.b64encode(image_digest_sha512).decode('ascii')
+            image_digest_sha256_hex = binascii.hexlify(image_digest_sha512).decode('ascii')
+
+            print('--- DIGEST ---')
+            print('SHA512: {}'.format(image_digest_sha256_base64))
+            print('SHA512/hex: {}'.format(image_digest_sha256_hex))
+            print('--- END DIGEST ---')
+
         with open(filename_meta, 'w') as f:
             yaml.safe_dump({
                 'image_prefix': self.image_prefix,
                 'image_digests': {
-                    'SHA512': base64.b64encode(image_digest_sha512).decode('ascii'),
+                    'SHA512': image_digest_sha256_base64,
                 },
                 'image_size': image_size_complete,
             }, f)
