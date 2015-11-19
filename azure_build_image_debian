@@ -365,6 +365,13 @@ rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg
 rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg~
 fi
 
+echo "--- APT ---"
+cat ${MOUNT_DIR}/etc/apt/sources.list
+echo "--- END APT ---"
+echo "--- APT-KEYS ---"
+chroot ${MOUNT_DIR} apt-key list
+echo "--- END APT-KEYS ---"
+
 chroot ${MOUNT_DIR} apt-get update
 chroot ${MOUNT_DIR} apt-get upgrade -y
 
