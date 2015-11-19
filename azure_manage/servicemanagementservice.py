@@ -12,10 +12,10 @@ from azure.servicemanagement.servicemanagementservice import _XmlSerializer
 
 def _serialize_os_image_to_xml(
         label, media_link, name, os,
-        description=u'', image_family=u'',
-        icon_uri=u'', small_icon_uri=u'',
-        eula=u'', privacy_uri=u'',
-        language=u'',
+        description=None, image_family=None,
+        icon_uri=None, small_icon_uri=None,
+        eula=None, privacy_uri=None,
+        language=None,
         show_in_gui=True, published_date=None):
     return _XmlSerializer.doc_from_data(
         'OSImage',
