@@ -23,6 +23,7 @@ class Cli(CliBase):
         self.image_filename_prefix = os.path.join(self.workdir, self.image_prefix)
         self.image_name = self.config_get('image_name')
         self.image_label = self.config_get('image_label', self.image_name)
+        self.image_family = self.config_get('image_family', self.image_name)
         self.image_meta = self.config_get('image_meta', {})
 
         self.storage_account = self.config_get('storage_account')
@@ -61,7 +62,13 @@ class Cli(CliBase):
     def do_register(self, servicemanager, progress_stream):
         print('Register image {} ({})'.format(self.image_name, self.image_label))
         progress_stream.write_progress('Register image')
-        servicemanager.add_os_image(self.image_label, self.storage_url, self.image_name, 'Linux', **self.image_meta)
+        servicemanager.add_os_image(
+            self.image_label,
+            self.storage_url,
+            self.image_name,
+            'Linux',
+            image_family=self.image_family,
+            **self.image_meta)
         print('Finished register image')
         progress_stream.write_progress('')
 

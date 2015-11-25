@@ -18,7 +18,7 @@ class Cli(CliBase):
     def __init__(self):
         super().__init__()
 
-        self.image_family = self.config_get('image_meta')['image_family']
+        self.image_family = self.config_get('image_family')
 
         self.subscription = self.config_get('subscription')
         self.subscription_keyfile = self.config_get('subscription_keyfile')
