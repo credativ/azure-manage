@@ -1,30 +1,29 @@
 ---
 default: &DEFAULT
-  storage_account: ''
-  storage_container: ''
-  subscription: ''
-  subscription_keyfile: ''
+  storage_account: null
+  storage_container: null
+  subscription: null
+  subscription_keyfile: null
+
+default-daily: &DEFAULT-DAILY
+  <<: *DEFAULT
+  image_name: 'Debian-{release_number}-DAILY-amd64-{timestamp}'
+  image_label: 'Debian {release_number} "{release_name}" DAILY'
 
 wheezy:
-  <<: *DEFAULT
+  <<: *DEFAULT-DAILY
   release: wheezy
-  image_label: 'Debian 7 "Wheezy"'
-  image_name: Debian-7-amd64-{image_timestamp}
-  image_meta:
-    image_family: 'Debian 7'
+  release_name: Wheezy
+  release_number: 7
 
 jessie:
-  <<: *DEFAULT
+  <<: *DEFAULT-DAILY
   release: jessie
-  image_label: 'Debian 8 "Jessie"'
-  image_name: Debian-8-amd64-{image_timestamp}
-  image_meta:
-    image_family: 'Debian 8'
+  release_name: Jessie
+  release_number: 8
 
 stretch:
-  <<: *DEFAULT
+  <<: *DEFAULT-DAILY
   release: stretch
-  image_label: 'Debian 9 "Stretch"'
-  image_name: Debian-9_DAILY-amd64-{image_timestamp}
-  image_meta:
-    image_family: 'Debian 9'
+  release_name: Stretch
+  release_number: 9
