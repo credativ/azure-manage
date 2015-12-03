@@ -3,6 +3,7 @@
 # License: MIT, see LICENSE.txt for details.
 
 import argparse
+import os
 
 from ..config import Config
 
@@ -41,6 +42,11 @@ class CliBase:
                 self.config_section = Config(c)[self.args.section]
         else:
             self.config_section = {}
+
+        for key, value in os.environ.items():
+            if key.startswith('AZURE_MANAGE_'):
+                key = key[13:].lower()
+                self.config_section[key] = value
 
         self.config_section.update(self.args.options)
 
