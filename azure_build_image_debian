@@ -227,6 +227,8 @@ cleanup(){
 		echo "Finished."
 	fi
 
+	set +e
+
 	sync
 	umount -l ${MOUNT_DIR}
 
