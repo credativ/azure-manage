@@ -386,6 +386,7 @@ fi
 chroot ${MOUNT_DIR} apt-get install -y linux-image-amd64
 
 unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install -y waagent
+rm -f ${MOUNT_DIR}/var/log/waagent.log
 
 # Setting-up initramfs
 chroot ${MOUNT_DIR} update-initramfs -u
