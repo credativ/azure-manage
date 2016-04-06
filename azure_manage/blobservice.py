@@ -26,5 +26,3 @@ class BlobService(BlobServiceBase):
         )
 
         uploader(size, stream, progress_stream)
-
-        return 'https://{}/{}/{}'.format(self._get_host(), container_name, blob_name)

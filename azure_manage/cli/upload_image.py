@@ -51,11 +51,12 @@ class Cli(CliBase):
             print('Uncompressed image not found, try .xz compressed one')
             image_file = lzma.open(self.image_filename_prefix + '.vhd.xz', 'rb')
 
-        print('Upload image {}/{}/{}'.format(self.storage_account, self.storage_container, self.storage_name))
         blob = BlobService(self.storage_account, storage_key, host_base='.blob.' + self.host_base)
+        self.storage_url = blob.make_blob_url(self.storage_container, self.storage_name)
+        print('Upload image {}'.format(self.storage_url))
         blob.create_container(self.storage_container, x_ms_blob_public_access='container')
-        self.storage_url = blob.put_image_from_file(self.storage_container, self.storage_name, image_size, image_file, progress_stream)
-        print('Finished upload image {}'.format(self.storage_url))
+        blob.put_image_from_file(self.storage_container, self.storage_name, image_size, image_file, progress_stream)
+        print('Finished upload image')
 
     def do_register(self, progress_stream):
         print('Register image {} ({})'.format(self.image_name, self.image_label))
