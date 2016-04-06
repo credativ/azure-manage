@@ -39,9 +39,11 @@ class CliBase:
         self.args = self.parser.parse_args(args)
 
         if self.args.config:
+            self.config_filename_base = os.path.dirname(os.path.realpath(self.args.config))
             with open(self.args.config) as c:
                 self.config_section = Config(c)[self.args.section]
         else:
+            self.config_filename_base = '.'
             self.config_section = {}
 
         for key, value in os.environ.items():
@@ -69,13 +71,16 @@ class CliBase:
             value = config.get(key, default)
         return self.__config_expand(value)
 
+    def config_get_filename(self, key, default=__marker):
+        return os.path.join(self.config_filename_base, self.config_get(key, default))
+
     @property
     def host_base(self):
         return self.config_get('host_base', 'core.windows.net')
 
     def servicemanager_create(self, cls=ServiceManagementService):
         subscription = self.config_get('subscription')
-        subscription_keyfile = self.config_get('subscription_keyfile')
+        subscription_keyfile = self.config_get_filename('subscription_keyfile')
         host = 'management.' + self.host_base
         return cls(subscription, subscription_keyfile, host=host)
 
