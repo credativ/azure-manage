@@ -69,10 +69,15 @@ class CliBase:
             value = config.get(key, default)
         return self.__config_expand(value)
 
+    @property
+    def host_base(self):
+        return self.config_get('host_base', 'core.windows.net')
+
     def servicemanager_create(self, cls=ServiceManagementService):
         subscription = self.config_get('subscription')
         subscription_keyfile = self.config_get('subscription_keyfile')
-        return cls(subscription, subscription_keyfile)
+        host = 'management.' + self.host_base
+        return cls(subscription, subscription_keyfile, host=host)
 
     @property
     def workdir(self):
