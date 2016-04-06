@@ -6,6 +6,7 @@ import argparse
 import os
 
 from ..config import Config
+from ..servicemanagementservice import ServiceManagementService
 
 
 class ArgsActionDict(argparse.Action):
@@ -67,6 +68,11 @@ class CliBase:
         else:
             value = config.get(key, default)
         return self.__config_expand(value)
+
+    def servicemanager_create(self, cls=ServiceManagementService):
+        subscription = self.config_get('subscription')
+        subscription_keyfile = self.config_get('subscription_keyfile')
+        return cls(subscription, subscription_keyfile)
 
     @property
     def workdir(self):

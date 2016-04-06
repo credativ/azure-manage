@@ -6,7 +6,6 @@ import argparse
 import os
 from pprint import pprint
 
-from ..servicemanagementservice import ServiceManagementService
 from . import CliBase, setup_argparse
 
 
@@ -20,12 +19,10 @@ class Cli(CliBase):
 
         self.image_family = self.config_get('image_family')
 
-        self.subscription = self.config_get('subscription')
-        self.subscription_keyfile = self.config_get('subscription_keyfile')
+        self.servicemanager = self.servicemanager_create()
 
     def __call__(self):
-        servicemanager = ServiceManagementService(self.subscription, self.subscription_keyfile)
-        for i in servicemanager.list_os_images():
+        for i in self.servicemanager.list_os_images():
             if i.image_family != self.image_family:
                 continue
             if self.args.category and i.category != self.args.category:

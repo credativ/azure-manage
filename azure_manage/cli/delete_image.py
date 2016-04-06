@@ -5,7 +5,6 @@
 import os
 
 from ..config import Config
-from ..servicemanagementservice import ServiceManagementService
 from . import CliBase, setup_argparse
 
 
@@ -19,12 +18,10 @@ class Cli(CliBase):
 
         self.image_name = self.config_get('image_name')
 
-        self.subscription = self.config_get('subscription')
-        self.subscription_keyfile = self.config_get('subscription_keyfile')
+        self.servicemanager = self.servicemanager_create()
 
     def __call__(self):
-        servicemanager = ServiceManagementService(self.subscription, self.subscription_keyfile)
-        servicemanager.delete_os_image(self.image_name, self.args.delete_vhd)
+        self.servicemanager.delete_os_image(self.image_name, self.args.delete_vhd)
 
 
 def main():
