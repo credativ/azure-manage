@@ -53,6 +53,7 @@ class Cli(CliBase):
 
         print('Upload image {}/{}/{}'.format(self.storage_account, self.storage_container, self.storage_name))
         blob = BlobService(self.storage_account, storage_key, host_base='.blob.' + self.host_base)
+        blob.create_container(self.storage_container, x_ms_blob_public_access='container')
         self.storage_url = blob.put_image_from_file(self.storage_container, self.storage_name, image_size, image_file, progress_stream)
         print('Finished upload image {}'.format(self.storage_url))
 
