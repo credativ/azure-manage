@@ -17,13 +17,13 @@ class Cli(CliBase):
     def __init__(self):
         super().__init__()
 
-        self.image_family = self.config_get('image_family')
+        self.image_family = self.config_get('image_family', None)
 
         self.servicemanager = self.servicemanager_create()
 
     def __call__(self):
         for i in self.servicemanager.list_os_images():
-            if i.image_family != self.image_family:
+            if self.image_family and i.image_family != self.image_family:
                 continue
             if self.args.category and i.category != self.args.category:
                 continue
