@@ -10,6 +10,8 @@ if [ "$UNSHARED" != true ] ; then
   exec env UNSHARED=true unshare --mount --pid --fork --mount-proc "$0" "$@"
 fi
 
+export DEBIAN_FRONTEND=noninteractive
+
 # Parse input parameters
 usage() {
 	echo "Usage: $0 --release|-r <jessie|wheezy> [options]
