@@ -140,20 +140,6 @@ if [ -z "${RELEASE}" ] ; then
 	echo "Release not recognized: please specify the -r parameter."
 	usage
 fi
-case "${RELEASE}" in
-	"wheezy")
-		RELEASE_NUM=7
-	;;
-	"jessie")
-		RELEASE_NUM=8
-	;;
-	"stretch")
-		RELEASE_NUM=9
-	;;
-	"buster")
-		RELEASE_NUM=10
-	;;
-esac
 
 if [ -z "${DEB_MIRROR}" ] ; then
 	DEB_MIRROR=http://httpredir.debian.org/debian
