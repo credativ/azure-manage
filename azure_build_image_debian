@@ -177,7 +177,7 @@ if [ -z "${OUTPUT}" ] ; then
 	OUTPUT=debian-${RELEASE}-$(TZ=UTC date '+%Y%m%d%H%M')-amd64
 fi
 
-NEEDED_PACKAGES=sudo,locales,extlinux,openssh-server,file
+NEEDED_PACKAGES=sudo,locales,openssh-server,file
 if [ "${RELEASE}" = "wheezy" ] ; then
 	NEEDED_PACKAGES=${NEEDED_PACKAGES},acpid,acpi-support-base,ntp,unscd
 else
@@ -385,31 +385,57 @@ Pin-Priority: 500
 EOF
 fi
 
-chroot ${MOUNT_DIR} apt-get install -y linux-image-amd64
-
-unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install -y waagent
+unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install --no-install-recommends -y waagent
 rm -f ${MOUNT_DIR}/var/log/waagent.log
 
-# Setting-up initramfs
+mount --bind /dev ${MOUNT_DIR}/dev
+mount --bind /proc ${MOUNT_DIR}/proc
+mount --bind /sys ${MOUNT_DIR}/sys
+
+####################
+### Setup kernel ###
+####################
+chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends linux-image-amd64
 chroot ${MOUNT_DIR} update-initramfs -u
 
-rm ${MOUNT_DIR}/var/cache/apt/archives/*.deb
-
-###########################
-### Setting-up extlinux ###
-###########################
-mkdir -p ${MOUNT_DIR}/boot/extlinux 
+#############################
+### Setting-up bootloader ###
+#############################
+KERNEL_PARAMS="root=UUID=${UUID} console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200"
 if [ "${RELEASE}" = "wheezy" ] ; then
-  append="rootdelay=30"
+  KERNEL_PARAMS="$KERNEL_PARAMS rootdelay=30"
 fi
-cat >${MOUNT_DIR}/boot/extlinux/extlinux.conf <<EOF
+
+if [ "${RELEASE}" = "wheezy" ] ; then
+	mkdir -p ${MOUNT_DIR}/boot/extlinux
+
+	cat >${MOUNT_DIR}/boot/extlinux/extlinux.conf <<EOF
 default linux
 timeout 1
 label linux
 kernel /vmlinuz
 append initrd=/initrd.img root=UUID=${UUID} console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 $append
 EOF
-extlinux --install ${MOUNT_DIR}/boot/extlinux
+	chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends extlinux
+
+	extlinux --install ${MOUNT_DIR}/boot/extlinux
+else
+	chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends grub-pc
+	chroot ${MOUNT_DIR} grub-install --no-floppy --skip-fs-probe /dev/${LOOPRAW_DEVICE}
+
+	sed -i \
+		-e 's/^[\s#]*GRUB_CMDLINE_LINUX_DEFAULT\s*=.*/GRUB_CMDLINE_LINUX_DEFAULT=""/;' \
+		-e 's/^[\s#]*GRUB_CMDLINE_LINUX\s*=.*/GRUB_CMDLINE_LINUX="'"${KERNEL_PARAMS}"'"/;' \
+		${MOUNT_DIR}/etc/default/grub
+
+	chroot ${MOUNT_DIR} update-grub
+fi
+
+umount ${MOUNT_DIR}/dev
+umount ${MOUNT_DIR}/proc
+umount ${MOUNT_DIR}/sys
+
+rm ${MOUNT_DIR}/var/cache/apt/archives/*.deb
 
 ###################
 ### HOOK SCRIPT ###
