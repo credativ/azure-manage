@@ -374,6 +374,17 @@ fi
 unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install --no-install-recommends -y waagent
 rm -f ${MOUNT_DIR}/var/log/waagent.log
 
+if [ -d ${MOUNT_DIR}/etc/cloud/cloud.cfg.d/ ]; then
+       cat > ${MOUNT_DIR}/etc/cloud/cloud.cfg.d/92_azure.cfg <<EOF
+system_info:
+   package_mirrors:
+     - arches: [default]
+       failsafe:
+         primary: ${SOURCE_LIST_MIRROR}
+         security: ${SOURCE_LIST_MIRROR}-security
+EOF
+fi
+
 mount --bind /dev ${MOUNT_DIR}/dev
 mount --bind /proc ${MOUNT_DIR}/proc
 mount --bind /sys ${MOUNT_DIR}/sys
