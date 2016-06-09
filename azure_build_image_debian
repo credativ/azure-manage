@@ -269,10 +269,7 @@ chroot ${MOUNT_DIR} mount /proc || true
 if [ "${RELEASE}" = "wheezy" ] ; then
 	sed -i "s#1:2345:respawn:/sbin/getty 38400 tty1#1:2345:respawn:/sbin/getty --noclear 38400 tty1#" ${MOUNT_DIR}/etc/inittab
 else
-	# XXX: the serial port on Microsoft Azure plattform can't cope with
-	# lots of data, keep this option disabled.
-	#echo ForwardToConsole=yes >> ${MOUNT_DIR}/etc/systemd/journald.conf
-	:
+	echo ForwardToConsole=yes >> ${MOUNT_DIR}/etc/systemd/journald.conf
 fi
 
 chroot ${MOUNT_DIR} apt-get install -y locales-all
