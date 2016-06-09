@@ -314,8 +314,6 @@ deb ${SOURCE_LIST_MIRROR} ${RELEASE} main
 deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main
 deb ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
 deb-src ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
-deb http://security.debian.org/ ${RELEASE}/updates main
-deb-src http://security.debian.org/ ${RELEASE}/updates main
 #deb ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
 #deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
 EOF
