@@ -26,6 +26,7 @@ class ArgsActionDict(argparse.Action):
 def setup_argparse(description):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--config', metavar='CONFIG', default=None)
+    parser.add_argument('--debug', action='store_true')
     parser.add_argument('--option', metavar='OPTION=VALUE', dest='options',
             default={}, action=ArgsActionDict)
     parser.add_argument('--workdir', metavar='WORKDIR', default='.',
@@ -41,6 +42,8 @@ class CliBase:
 
     def __init__(self, args=None):
         self.args = self.parser.parse_args(args)
+
+        logging.basicConfig(level=self.args.debug and logging.DEBUG or logging.INFO)
 
         if self.args.config:
             self.config_filename_base = os.path.dirname(os.path.realpath(self.args.config))
