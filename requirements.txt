@@ -1,3 +1,4 @@
+appdirs
 azure-servicemanagement-legacy
 azure-storage
 pyyaml

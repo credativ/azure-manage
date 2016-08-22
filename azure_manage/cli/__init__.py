@@ -2,9 +2,11 @@
 # Copyright: 2015 Bastian Blank
 # License: MIT, see LICENSE.txt for details.
 
+import appdirs
 import argparse
 import logging
 import os
+import sys
 
 from ..config import Config
 from ..servicemanagementservice import ServiceManagementService
@@ -25,7 +27,7 @@ class ArgsActionDict(argparse.Action):
 
 def setup_argparse(description):
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--config', metavar='CONFIG', default=None)
+    parser.add_argument('--config', metavar='CONFIG', default='config.yml')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--option', metavar='OPTION=VALUE', dest='options',
             default={}, action=ArgsActionDict)
@@ -45,13 +47,17 @@ class CliBase:
 
         logging.basicConfig(level=self.args.debug and logging.DEBUG or logging.INFO)
 
-        if self.args.config:
-            self.config_filename_base = os.path.dirname(os.path.realpath(self.args.config))
-            with open(self.args.config) as c:
-                self.config_section = Config(c)[self.args.section]
+        for configdir in ('.', appdirs.user_config_dir('azure-manage')):
+            configfile = os.path.join(configdir, self.args.config)
+            if os.path.exists(configfile):
+                logging.debug('Read config file %s', configfile)
+                with open(configfile) as c:
+                    self.config_section = Config(c)[self.args.section]
+                    self.config_filename_base = os.path.dirname(os.path.realpath(configfile))
+                break
         else:
-            self.config_filename_base = '.'
-            self.config_section = {}
+            logging.critical('No config file loaded')
+            sys.exit(1)
 
         for key, value in os.environ.items():
             if key.startswith('AZURE_MANAGE_'):
