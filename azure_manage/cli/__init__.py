@@ -3,10 +3,14 @@
 # License: MIT, see LICENSE.txt for details.
 
 import argparse
+import logging
 import os
 
 from ..config import Config
 from ..servicemanagementservice import ServiceManagementService
+
+
+logger = logging.getLogger(__name__)
 
 
 class ArgsActionDict(argparse.Action):
