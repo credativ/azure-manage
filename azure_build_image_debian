@@ -408,7 +408,7 @@ default linux
 timeout 1
 label linux
 kernel /vmlinuz
-append initrd=/initrd.img root=UUID=${UUID} console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 $append
+append initrd=/initrd.img $KERNEL_PARAMS
 EOF
 	chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends extlinux
 
