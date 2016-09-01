@@ -395,7 +395,7 @@ chroot ${MOUNT_DIR} update-initramfs -u
 #############################
 ### Setting-up bootloader ###
 #############################
-KERNEL_PARAMS="root=UUID=${UUID} console=tty0 console=ttyS0,115200"
+KERNEL_PARAMS="root=UUID=${UUID} console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 consoleblank=0 systemd.show_status=true"
 if [ "${RELEASE}" = "wheezy" ] ; then
   KERNEL_PARAMS="$KERNEL_PARAMS rootdelay=30"
 fi
