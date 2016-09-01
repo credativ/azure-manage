@@ -182,6 +182,10 @@ if ! [ `whoami` = "root" ] ; then
 	exit 1
 fi
 
+apt_install() {
+       chroot ${MOUNT_DIR} apt-get install --yes --no-install-recommends --no-remove "$@"
+}
+
 set -x
 
 ######################################
@@ -272,7 +276,7 @@ else
 	echo ForwardToConsole=yes >> ${MOUNT_DIR}/etc/systemd/journald.conf
 fi
 
-chroot ${MOUNT_DIR} apt-get install -y locales-all
+apt_install locales-all
 
 rm -f ${MOUNT_DIR}/etc/ssh/ssh_host_*
 
@@ -345,7 +349,7 @@ FY6A20E=
 -----END PGP PUBLIC KEY BLOCK-----
 EOF
 chroot ${MOUNT_DIR} apt-get update
-chroot ${MOUNT_DIR} apt-get install -y debian-azure-archive-keyring
+apt_install debian-azure-archive-keyring
 rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg
 rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg~
 fi
@@ -368,7 +372,7 @@ Pin-Priority: 500
 EOF
 fi
 
-unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install --no-install-recommends -y waagent
+unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install --yes --no-install-recommends --no-remove waagent
 rm -f ${MOUNT_DIR}/var/log/waagent.log
 
 if [ -d ${MOUNT_DIR}/etc/cloud/cloud.cfg.d/ ]; then
@@ -389,7 +393,7 @@ mount --bind /sys ${MOUNT_DIR}/sys
 ####################
 ### Setup kernel ###
 ####################
-chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends linux-image-amd64
+apt_install linux-image-amd64
 chroot ${MOUNT_DIR} update-initramfs -u
 
 #############################
@@ -401,7 +405,7 @@ if [ "${RELEASE}" = "wheezy" ] ; then
 fi
 
 if [ "${RELEASE}" = "wheezy" ] ; then
-	chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends extlinux
+	apt_install extlinux
 	extlinux --install ${MOUNT_DIR}/boot/extlinux
 
 	sed -i \
@@ -410,7 +414,7 @@ if [ "${RELEASE}" = "wheezy" ] ; then
 
 	chroot ${MOUNT_DIR} extlinux-update
 else
-	chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends grub-pc
+	apt_install grub-pc
 	chroot ${MOUNT_DIR} grub-install --no-floppy --skip-fs-probe /dev/${LOOPRAW_DEVICE}
 
 	sed -i \
