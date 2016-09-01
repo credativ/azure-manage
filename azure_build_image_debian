@@ -401,18 +401,14 @@ if [ "${RELEASE}" = "wheezy" ] ; then
 fi
 
 if [ "${RELEASE}" = "wheezy" ] ; then
-	mkdir -p ${MOUNT_DIR}/boot/extlinux
-
-	cat >${MOUNT_DIR}/boot/extlinux/extlinux.conf <<EOF
-default linux
-timeout 1
-label linux
-kernel /vmlinuz
-append initrd=/initrd.img $KERNEL_PARAMS
-EOF
 	chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends extlinux
-
 	extlinux --install ${MOUNT_DIR}/boot/extlinux
+
+	sed -i \
+		-e 's/^[\s#]*EXTLINUX_PARAMETERS\s*=.*/EXTLINUX_PARAMETERS="'"${KERNEL_PARAMS}"'"/;' \
+		${MOUNT_DIR}/etc/default/extlinux
+
+	chroot ${MOUNT_DIR} extlinux-update
 else
 	chroot ${MOUNT_DIR} apt-get install -y --no-install-recommends grub-pc
 	chroot ${MOUNT_DIR} grub-install --no-floppy --skip-fs-probe /dev/${LOOPRAW_DEVICE}
