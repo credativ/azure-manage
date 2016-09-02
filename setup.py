@@ -19,8 +19,9 @@ setup(
         'azure_extract_publishsettings',
     ],
     install_requires=[
+        'appdirs',
         'azure-servicemanagement-legacy',
-        'azure-storage',
+        'azure-storage>=0.33',
         'pyyaml',
     ],
 )
