@@ -144,7 +144,7 @@ if [ -z "${RELEASE}" ] ; then
 fi
 
 if [ -z "${DEB_MIRROR}" ] ; then
-	DEB_MIRROR=http://httpredir.debian.org/debian
+	DEB_MIRROR=http://deb.debian.org/debian
 fi
 if [ -z "${EXTRA_PACKAGES}" ] ; then
 	EXTRA_PACKAGES=joe,most,screen,less,vim,bzip2,nano
