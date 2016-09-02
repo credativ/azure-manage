@@ -4,19 +4,17 @@
 
 import os
 
-from azure.storage.blob.blobservice import BlobService as BlobServiceBase
+from azure.storage.blob.pageblobservice import PageBlobService
 
 from .chunking import PageBlobChunkUploader
 
 
-class BlobService(BlobServiceBase):
+class BlobService(PageBlobService):
     def put_image_from_file(self, container_name, blob_name, size, stream, progress_stream):
-        self.put_blob(
+        self.create_blob(
             container_name,
             blob_name,
-            b'',
-            'PageBlob',
-            x_ms_blob_content_length=size,
+            size,
         )
 
         uploader = PageBlobChunkUploader(

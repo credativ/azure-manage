@@ -51,10 +51,10 @@ class Cli(CliBase):
             print('Uncompressed image not found, try .xz compressed one')
             image_file = lzma.open(self.image_filename_prefix + '.vhd.xz', 'rb')
 
-        blob = BlobService(self.storage_account, storage_key, host_base='.blob.' + self.host_base)
+        blob = BlobService(self.storage_account, storage_key, endpoint_suffix=self.host_base)
         self.storage_url = blob.make_blob_url(self.storage_container, self.storage_name)
         print('Upload image {}'.format(self.storage_url))
-        blob.create_container(self.storage_container, x_ms_blob_public_access='container')
+        blob.create_container(self.storage_container, public_access='container')
         blob.put_image_from_file(self.storage_container, self.storage_name, image_size, image_file, progress_stream)
         print('Finished upload image')
 

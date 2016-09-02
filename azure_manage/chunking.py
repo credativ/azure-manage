@@ -40,11 +40,10 @@ class BlobChunkUploader(object):
 
 class PageBlobChunkUploader(BlobChunkUploader):
     def upload_chunk(self, chunk_offset, chunk_data):
-        range_id = 'bytes={0}-{1}'.format(chunk_offset, chunk_offset + len(chunk_data) - 1)
-        self.blob_service.put_page(
+        self.blob_service.update_page(
             self.container_name,
             self.blob_name,
             chunk_data,
-            range_id,
-            'update',
+            chunk_offset,
+            chunk_offset + len(chunk_data) - 1,
         )
