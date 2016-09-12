@@ -240,6 +240,7 @@ MOUNT_DIR=`mktemp -d -t build-debimg.XXXXXX`
 mount /dev/mapper/${LOOP_DEVICE} ${MOUNT_DIR}
 debootstrap --verbose \
 	--include=${PKG_LIST} \
+	--exclude=systemd-shim \
 	${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
 
 ############################
