@@ -183,7 +183,7 @@ if ! [ `whoami` = "root" ] ; then
 fi
 
 apt_install() {
-       chroot ${MOUNT_DIR} apt-get install --yes --no-install-recommends --no-remove "$@"
+       unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install --yes --no-install-recommends --no-remove "$@"
 }
 
 set -x
@@ -379,7 +379,7 @@ Pin-Priority: 500
 EOF
 fi
 
-unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install --yes --no-install-recommends --no-remove waagent
+apt_install waagent
 rm -f ${MOUNT_DIR}/var/log/waagent.log
 
 if [ -d ${MOUNT_DIR}/etc/cloud/cloud.cfg.d/ ]; then
