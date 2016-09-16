@@ -243,6 +243,69 @@ debootstrap --verbose \
 	--exclude=systemd-shim \
 	${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
 
+
+##################
+### Setup base ###
+##################
+# Setup the default hostname (will be set by cloud-init
+# at boot time anyway)
+echo "debian.example.com" >${MOUNT_DIR}/etc/hostname
+
+# This should be a correct default everywhere
+cat >${MOUNT_DIR}/etc/apt/sources.list <<EOF
+deb ${SOURCE_LIST_MIRROR} ${RELEASE} main
+deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main
+deb ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
+deb-src ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
+#deb ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
+#deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
+EOF
+
+if [ "${RELEASE}" = "wheezy" ] || [ "${RELEASE}" = "jessie" ]; then
+	cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
+deb ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
+deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
+deb ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
+deb-src ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
+EOF
+chroot ${MOUNT_DIR} apt-key add - <<EOF
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1
+
+mQENBFYWcbkBCADKvo4KT/ic3wb4AoNFtWvoS1Ae3NFcvM/6WR/n9BTsayOlnjDu
+EFh7yH16nIhuO5pZFocY+32BWMEmiK6/0pkk1lB9+XfNB8yqDCJ/ItzADfuKQv6g
+smfx4tLa1Vj+jUbrgiIG7MYTCPlpkSuPA+FgntlR4JBxOy2g4fqqp3of+xM8tfSN
+4I7/g1989YU9EQN53c1HGLdsc5x5Y5Kezd46H4IK5oyri7BaG4zRzpJLYa4yxB2W
+re+HXP0a5SN/zQq1oq8pvkPubEBPKhdypZzzoHWPkZqXh1pHsMMNRkwsLW/3iwzE
+IjDKrbdILz3/b+iLLIvYo9RlTycRO0XeS/B3ABEBAAG0UkRlYmlhbiBmb3IgQXp1
+cmUgQXJjaGl2ZSBBdXRvbWF0aWMgU2lnbmluZyBLZXkgKDgvamVzc2llKSA8bWlj
+cm9zb2Z0QGNyZWRhdGl2LmNvbT6JAT4EEwECACgFAlYWcbkCGwMFCQPCZwAGCwkI
+BwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEAbqSemobK1/2c8H/1j4HK/izt7aw7Kk
+g+ChRDhltb4LiYTZNgHaBnLGkKewkA1vYIHQjdu/pVnJjh1JzvOBFV+rhJ4Cc60D
+s4JDqkrl8LpA4jsLb/PW1bRtbW92mPfhWgjyWs6S2tRBsBy1m2+SLZKeaDUq/PCD
+VnaClzDh2fQYimI8IQk5U/u8VHXtDm3qYQSq7dJMTTnDcBC1oCjEYN+uPm9M+tUI
+ik2hIE4VmjIXYTQVTa1lD+qyJvZ9hCsBUxAGllFpcWlyexN5orer6c+30XY/0Y4i
+Q+zzVPrp1s6MgM9F8ofgd2+MhL57fwyj2A+Tbyzm7xYhzPPMx/mopo4pi884+5lo
+FY6A20E=
+=X0jG
+-----END PGP PUBLIC KEY BLOCK-----
+EOF
+chroot ${MOUNT_DIR} apt-get update
+apt_install debian-azure-archive-keyring
+rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg
+rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg~
+fi
+
+echo "--- APT ---"
+cat ${MOUNT_DIR}/etc/apt/sources.list
+echo "--- END APT ---"
+echo "--- APT-KEYS ---"
+chroot ${MOUNT_DIR} apt-key list
+echo "--- END APT-KEYS ---"
+
+chroot ${MOUNT_DIR} apt-get update
+chroot ${MOUNT_DIR} apt-get upgrade -y
+
 ############################
 ### Customize the distro ###
 ############################
@@ -305,65 +368,6 @@ EOF
 
 # FIXME: DHCP RFC3442 is used incorrect in Azure
 sed -ie 's,rfc3442-classless-static-routes,disabled-\0,' $BODI_CHROOT_PATH/etc/dhcp/dhclient.conf
-
-# Setup the default hostname (will be set by cloud-init
-# at boot time anyway)
-echo "debian.example.com" >${MOUNT_DIR}/etc/hostname
-
-# This should be a correct default everywhere
-cat >${MOUNT_DIR}/etc/apt/sources.list <<EOF
-deb ${SOURCE_LIST_MIRROR} ${RELEASE} main
-deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main
-deb ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
-deb-src ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
-#deb ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
-#deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
-EOF
-
-if [ "${RELEASE}" = "wheezy" ] || [ "${RELEASE}" = "jessie" ]; then
-	cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
-deb ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
-deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
-deb ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
-deb-src ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
-EOF
-chroot ${MOUNT_DIR} apt-key add - <<EOF
------BEGIN PGP PUBLIC KEY BLOCK-----
-Version: GnuPG v1
-
-mQENBFYWcbkBCADKvo4KT/ic3wb4AoNFtWvoS1Ae3NFcvM/6WR/n9BTsayOlnjDu
-EFh7yH16nIhuO5pZFocY+32BWMEmiK6/0pkk1lB9+XfNB8yqDCJ/ItzADfuKQv6g
-smfx4tLa1Vj+jUbrgiIG7MYTCPlpkSuPA+FgntlR4JBxOy2g4fqqp3of+xM8tfSN
-4I7/g1989YU9EQN53c1HGLdsc5x5Y5Kezd46H4IK5oyri7BaG4zRzpJLYa4yxB2W
-re+HXP0a5SN/zQq1oq8pvkPubEBPKhdypZzzoHWPkZqXh1pHsMMNRkwsLW/3iwzE
-IjDKrbdILz3/b+iLLIvYo9RlTycRO0XeS/B3ABEBAAG0UkRlYmlhbiBmb3IgQXp1
-cmUgQXJjaGl2ZSBBdXRvbWF0aWMgU2lnbmluZyBLZXkgKDgvamVzc2llKSA8bWlj
-cm9zb2Z0QGNyZWRhdGl2LmNvbT6JAT4EEwECACgFAlYWcbkCGwMFCQPCZwAGCwkI
-BwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEAbqSemobK1/2c8H/1j4HK/izt7aw7Kk
-g+ChRDhltb4LiYTZNgHaBnLGkKewkA1vYIHQjdu/pVnJjh1JzvOBFV+rhJ4Cc60D
-s4JDqkrl8LpA4jsLb/PW1bRtbW92mPfhWgjyWs6S2tRBsBy1m2+SLZKeaDUq/PCD
-VnaClzDh2fQYimI8IQk5U/u8VHXtDm3qYQSq7dJMTTnDcBC1oCjEYN+uPm9M+tUI
-ik2hIE4VmjIXYTQVTa1lD+qyJvZ9hCsBUxAGllFpcWlyexN5orer6c+30XY/0Y4i
-Q+zzVPrp1s6MgM9F8ofgd2+MhL57fwyj2A+Tbyzm7xYhzPPMx/mopo4pi884+5lo
-FY6A20E=
-=X0jG
------END PGP PUBLIC KEY BLOCK-----
-EOF
-chroot ${MOUNT_DIR} apt-get update
-apt_install debian-azure-archive-keyring
-rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg
-rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg~
-fi
-
-echo "--- APT ---"
-cat ${MOUNT_DIR}/etc/apt/sources.list
-echo "--- END APT ---"
-echo "--- APT-KEYS ---"
-chroot ${MOUNT_DIR} apt-key list
-echo "--- END APT-KEYS ---"
-
-chroot ${MOUNT_DIR} apt-get update
-chroot ${MOUNT_DIR} apt-get upgrade -y
 
 if [ "${RELEASE}" = "wheezy" ] ; then
 	cat > ${MOUNT_DIR}/etc/apt/preferences.d/linux.pref <<EOF
