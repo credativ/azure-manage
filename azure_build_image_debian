@@ -165,7 +165,7 @@ if [ -z "${OUTPUT}" ] ; then
 	OUTPUT=debian-${RELEASE}-$(TZ=UTC date '+%Y%m%d%H%M')-amd64
 fi
 
-NEEDED_PACKAGES=sudo,locales,openssh-server,file
+NEEDED_PACKAGES=sudo,locales-all,openssh-server,file
 if [ "${RELEASE}" = "wheezy" ] ; then
 	NEEDED_PACKAGES=${NEEDED_PACKAGES},acpid,acpi-support-base,ntp,unscd
 else
@@ -339,8 +339,6 @@ if [ "${RELEASE}" = "wheezy" ] ; then
 else
 	echo ForwardToConsole=yes >> ${MOUNT_DIR}/etc/systemd/journald.conf
 fi
-
-apt_install locales-all
 
 rm -f ${MOUNT_DIR}/etc/ssh/ssh_host_*
 
