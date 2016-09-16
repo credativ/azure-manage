@@ -239,8 +239,6 @@ tune2fs -i 0 /dev/mapper/${LOOP_DEVICE}
 MOUNT_DIR=`mktemp -d -t build-debimg.XXXXXX`
 mount /dev/mapper/${LOOP_DEVICE} ${MOUNT_DIR}
 debootstrap --verbose \
-	--include=${PKG_LIST} \
-	--exclude=systemd-shim \
 	${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
 
 
@@ -305,6 +303,8 @@ echo "--- END APT-KEYS ---"
 
 chroot ${MOUNT_DIR} apt-get update
 chroot ${MOUNT_DIR} apt-get upgrade -y
+
+apt_install $(echo ${PKG_LIST} | tr ',' ' ')
 
 ############################
 ### Customize the distro ###
