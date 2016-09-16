@@ -301,6 +301,10 @@ echo "--- APT-KEYS ---"
 chroot ${MOUNT_DIR} apt-key list
 echo "--- END APT-KEYS ---"
 
+mount --bind /dev ${MOUNT_DIR}/dev
+mount --bind /proc ${MOUNT_DIR}/proc
+mount --bind /sys ${MOUNT_DIR}/sys
+
 chroot ${MOUNT_DIR} apt-get update
 chroot ${MOUNT_DIR} apt-get upgrade -y
 
@@ -388,10 +392,6 @@ system_info:
          security: ${SOURCE_LIST_MIRROR}-security
 EOF
 fi
-
-mount --bind /dev ${MOUNT_DIR}/dev
-mount --bind /proc ${MOUNT_DIR}/proc
-mount --bind /sys ${MOUNT_DIR}/sys
 
 ####################
 ### Setup kernel ###
