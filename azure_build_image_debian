@@ -99,7 +99,7 @@ for i in $@ ; do
 		shift
 	;;
 	"--release"|"-r")
-		if [ "${2}" = "wheezy" ] || [ "${2}" = "jessie" ] || [ "${2}" = "stretch" ] || [ "${2}" = "buster" ] ; then
+		if [ "${2}" = "wheezy" ] || [ "${2}" = "jessie" ] || [ "${2}" = "stretch" ] || [ "${2}" = "buster" ] || [ "${2}" = "sid" ] ; then
 			RELEASE=${2}
 			shift
 			shift
@@ -253,11 +253,16 @@ echo "debian.example.com" >${MOUNT_DIR}/etc/hostname
 cat >${MOUNT_DIR}/etc/apt/sources.list <<EOF
 deb ${SOURCE_LIST_MIRROR} ${RELEASE} main
 deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main
+EOF
+
+if [ "${RELEASE}" != "sid" ]; then
+	cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
 deb ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
 deb-src ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
 #deb ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
 #deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
 EOF
+fi
 
 if [ "${RELEASE}" = "wheezy" ] || [ "${RELEASE}" = "jessie" ]; then
 	cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
