@@ -168,8 +168,10 @@ fi
 NEEDED_PACKAGES=sudo,locales-all,openssh-server,file
 if [ "${RELEASE}" = "wheezy" ] ; then
 	NEEDED_PACKAGES=${NEEDED_PACKAGES},acpid,acpi-support-base,ntp,unscd
-else
+elif [ "${RELEASE}" = "jessie" ] ; then
 	NEEDED_PACKAGES=${NEEDED_PACKAGES},dbus,libpam-systemd,ntp,unscd
+else
+	NEEDED_PACKAGES=${NEEDED_PACKAGES},libpam-systemd,unscd
 fi
 
 if [ ${EXTRA} = "no" ] ; then
