@@ -35,6 +35,7 @@ class Cli(CliBase):
 
         filename_image = os.path.join(workdir, '{}.vhd'.format(self.config_get('image_prefix')))
         filename_meta = os.path.join(workdir, '{}.yaml'.format(self.config_get('image_prefix')))
+        hook = os.path.abspath(os.path.expanduser(self.config_get('build_hook')))
 
         os.umask(0o22)
         if not os.path.isdir(workdir):
@@ -43,16 +44,19 @@ class Cli(CliBase):
         with open(filename_image, 'wb') as f:
             pass
 
-        subprocess.check_call(
-            (
-                'sudo',
-                os.path.join(self.args.bindir, 'azure_build_image_debian'),
-                '--release', self.release,
-                '--output', filename_image,
-                '--debootstrap-url', 'http://debian-archive.trafficmanager.net/debian',
-                '--image-size', str(self.image_size_gb),
-            ),
-        )
+        cmd = [
+            'sudo',
+            os.path.join(self.args.bindir, 'azure_build_image_debian'),
+            '--release', self.release,
+            '--output', filename_image,
+            '--debootstrap-url', 'http://debian-archive.trafficmanager.net/debian',
+            '--image-size', str(self.image_size_gb),
+        ]
+
+        if hook:
+            cmd.extend(('--hook-script', hook))
+
+        subprocess.check_call(cmd)
 
         with open(filename_image, 'rb+') as f:
             f.seek(0, 2)
