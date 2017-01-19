@@ -35,7 +35,7 @@ class Cli(CliBase):
 
         filename_image = os.path.join(workdir, '{}.vhd'.format(self.config_get('image_prefix')))
         filename_meta = os.path.join(workdir, '{}.yaml'.format(self.config_get('image_prefix')))
-        hook = os.path.abspath(os.path.expanduser(self.config_get('build_hook')))
+        hook = self.config_get('build_hook', None)
 
         os.umask(0o22)
         if not os.path.isdir(workdir):
@@ -54,7 +54,7 @@ class Cli(CliBase):
         ]
 
         if hook:
-            cmd.extend(('--hook-script', hook))
+            cmd.extend(('--hook-script', os.path.abspath(os.path.expanduser(hook))))
 
         subprocess.check_call(cmd)
 
