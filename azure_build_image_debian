@@ -188,6 +188,29 @@ apt_install() {
        unshare --pid --fork --mount-proc chroot ${MOUNT_DIR} apt-get install --yes --no-install-recommends --no-remove "$@"
 }
 
+apt_setup_sourceslist() {
+	cat >${MOUNT_DIR}/etc/apt/sources.list <<EOF
+deb $1 ${RELEASE} main
+deb-src $1 ${RELEASE} main
+EOF
+
+	if [ "${RELEASE}" != "sid" ]; then
+		cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
+deb $1-security ${RELEASE}/updates main
+deb-src $1-security ${RELEASE}/updates main
+#deb $1 ${RELEASE}-updates main
+#deb-src $1 ${RELEASE}-updates main
+EOF
+	fi
+
+	if [ "${RELEASE}" = "wheezy" ] || [ "${RELEASE}" = "jessie" ]; then
+		cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
+deb $1 ${RELEASE}-backports main
+deb-src $1 ${RELEASE}-backports main
+EOF
+	fi
+}
+
 set -x
 
 ######################################
@@ -250,29 +273,14 @@ debootstrap --verbose \
 # at boot time anyway)
 echo "debian.example.com" >${MOUNT_DIR}/etc/hostname
 
-# This should be a correct default everywhere
-cat >${MOUNT_DIR}/etc/apt/sources.list <<EOF
-deb ${SOURCE_LIST_MIRROR} ${RELEASE} main
-deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main
-EOF
-
-if [ "${RELEASE}" != "sid" ]; then
-	cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
-deb ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
-deb-src ${SOURCE_LIST_MIRROR}-security ${RELEASE}/updates main
-#deb ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
-#deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-updates main
-EOF
-fi
+apt_setup_sourceslist ${DEB_MIRROR}
 
 if [ "${RELEASE}" = "wheezy" ] || [ "${RELEASE}" = "jessie" ]; then
-	cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
-deb ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
-deb-src ${SOURCE_LIST_MIRROR} ${RELEASE}-backports main
-deb ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
-deb-src ${SOURCE_LIST_MIRROR}-azure ${RELEASE} main
+	cat >${MOUNT_DIR}/etc/apt/sources.list.d/debian-azure.list <<EOF
+deb http://debian-archive.trafficmanager.net/debian-azure ${RELEASE} main
+deb-src http://debian-archive.trafficmanager.net/debian-azure ${RELEASE} main
 EOF
-chroot ${MOUNT_DIR} apt-key add - <<EOF
+	chroot ${MOUNT_DIR} apt-key add - <<EOF
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1
 
@@ -438,6 +446,7 @@ umount ${MOUNT_DIR}/dev
 umount ${MOUNT_DIR}/proc
 umount ${MOUNT_DIR}/sys
 
+apt_setup_sourceslist ${SOURCE_LIST_MIRROR}
 rm ${MOUNT_DIR}/var/cache/apt/archives/*.deb
 
 ###################
