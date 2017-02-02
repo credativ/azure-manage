@@ -309,13 +309,6 @@ rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg
 rm -f ${MOUNT_DIR}/etc/apt/trusted.gpg~
 fi
 
-echo "--- APT ---"
-cat ${MOUNT_DIR}/etc/apt/sources.list
-echo "--- END APT ---"
-echo "--- APT-KEYS ---"
-chroot ${MOUNT_DIR} apt-key list
-echo "--- END APT-KEYS ---"
-
 mount --bind /dev ${MOUNT_DIR}/dev
 mount --bind /proc ${MOUNT_DIR}/proc
 mount --bind /sys ${MOUNT_DIR}/sys
@@ -458,6 +451,15 @@ fi
 umount -l ${MOUNT_DIR}/dev
 umount -l ${MOUNT_DIR}/proc
 umount -l ${MOUNT_DIR}/sys
+
+set +x
+echo "--- APT ---"
+cat ${MOUNT_DIR}/etc/apt/sources.list
+[ -e ${MOUNT_DIR}/etc/apt/sources.list.d/* ] && cat ${MOUNT_DIR}/etc/apt/sources.list.d/*
+echo "--- END APT ---"
+echo "--- APT-KEYS ---"
+chroot ${MOUNT_DIR} apt-key list
+echo "--- END APT-KEYS ---"
 
 apt_setup_sourceslist ${SOURCE_LIST_MIRROR}
 
