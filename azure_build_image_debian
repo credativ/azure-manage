@@ -343,7 +343,6 @@ cat >${MOUNT_DIR}/etc/fstab <<EOF
 # /etc/fstab: static file system information.
 UUID=${UUID}	/	ext4	errors=remount-ro	0	1
 EOF
-chroot ${MOUNT_DIR} mount /proc || true
 
 # No clear for the tty1 console
 if [ "${RELEASE}" = "wheezy" ] ; then
