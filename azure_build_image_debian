@@ -358,8 +358,6 @@ else
 	echo ForwardToConsole=yes >> ${MOUNT_DIR}/etc/systemd/journald.conf
 fi
 
-rm -f ${MOUNT_DIR}/etc/ssh/ssh_host_*
-
 # Setup networking (eg: DHCP by default)
 cat >${MOUNT_DIR}/etc/network/interfaces <<EOF
 # This file describes the network interfaces available on your system
@@ -394,7 +392,6 @@ EOF
 fi
 
 apt_install waagent
-rm -f ${MOUNT_DIR}/var/log/waagent.log
 
 if [ -d ${MOUNT_DIR}/etc/cloud/cloud.cfg.d/ ]; then
        cat > ${MOUNT_DIR}/etc/cloud/cloud.cfg.d/92_azure.cfg <<EOF
@@ -442,13 +439,6 @@ else
 	chroot ${MOUNT_DIR} update-grub
 fi
 
-umount ${MOUNT_DIR}/dev
-umount ${MOUNT_DIR}/proc
-umount ${MOUNT_DIR}/sys
-
-apt_setup_sourceslist ${SOURCE_LIST_MIRROR}
-rm ${MOUNT_DIR}/var/cache/apt/archives/*.deb
-
 ###################
 ### HOOK SCRIPT ###
 ###################
@@ -457,3 +447,14 @@ if [ -x ${HOOK_SCRIPT} ] ; then
 	export BODI_RELEASE=${RELEASE}
 	${HOOK_SCRIPT}
 fi
+
+umount ${MOUNT_DIR}/dev
+umount ${MOUNT_DIR}/proc
+umount ${MOUNT_DIR}/sys
+
+apt_setup_sourceslist ${SOURCE_LIST_MIRROR}
+
+rm ${MOUNT_DIR}/etc/ssh/ssh_host_*
+rm -f ${MOUNT_DIR}/var/log/waagent.log
+rm -r ${MOUNT_DIR}/var/cache/apt/*
+rm -r ${MOUNT_DIR}/var/lib/apt/lists/*
