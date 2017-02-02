@@ -275,7 +275,7 @@ echo "debian.example.com" >${MOUNT_DIR}/etc/hostname
 
 apt_setup_sourceslist ${DEB_MIRROR}
 
-if [ "${RELEASE}" = "wheezy" ] || [ "${RELEASE}" = "jessie" ]; then
+if [ "${RELEASE}" = "wheezy" ]; then
 	cat >${MOUNT_DIR}/etc/apt/sources.list.d/debian-azure.list <<EOF
 deb http://debian-archive.trafficmanager.net/debian-azure ${RELEASE} main
 deb-src http://debian-archive.trafficmanager.net/debian-azure ${RELEASE} main
@@ -388,6 +388,12 @@ if [ "${RELEASE}" = "wheezy" ] ; then
 Package: linux-image-amd64 initramfs-tools
 Pin: release n=wheezy-backports
 Pin-Priority: 500
+EOF
+elif [ "${RELEASE}" = "jessie" ] ; then
+       cat > ${MOUNT_DIR}/etc/apt/preferences.d/waagent.pref <<EOF
+Package: waagent
+Pin: release n=jessie-backports
+Pin-Priority: 990
 EOF
 fi
 
