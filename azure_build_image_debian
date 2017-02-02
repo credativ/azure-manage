@@ -465,3 +465,5 @@ rm ${MOUNT_DIR}/etc/ssh/ssh_host_*
 rm -f ${MOUNT_DIR}/var/log/waagent.log
 rm -r ${MOUNT_DIR}/var/cache/apt/*
 rm -r ${MOUNT_DIR}/var/lib/apt/lists/*
+
+fstrim ${MOUNT_DIR}
