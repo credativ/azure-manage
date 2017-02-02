@@ -408,7 +408,6 @@ fi
 ### Setup kernel ###
 ####################
 apt_install linux-image-amd64
-chroot ${MOUNT_DIR} update-initramfs -u
 
 #############################
 ### Setting-up bootloader ###
