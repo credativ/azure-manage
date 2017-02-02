@@ -247,6 +247,7 @@ cleanup(){
 
 	sync
 	umount -l ${MOUNT_DIR}
+	rmdir ${MOUNT_DIR}
 
 	dmsetup remove --deferred ${LOOP_DEVICE}
 	losetup -d /dev/${LOOPRAW_DEVICE}
