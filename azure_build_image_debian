@@ -448,9 +448,9 @@ if [ -x ${HOOK_SCRIPT} ] ; then
 	${HOOK_SCRIPT}
 fi
 
-umount ${MOUNT_DIR}/dev
-umount ${MOUNT_DIR}/proc
-umount ${MOUNT_DIR}/sys
+umount -l ${MOUNT_DIR}/dev
+umount -l ${MOUNT_DIR}/proc
+umount -l ${MOUNT_DIR}/sys
 
 apt_setup_sourceslist ${SOURCE_LIST_MIRROR}
 
