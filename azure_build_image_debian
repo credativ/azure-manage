@@ -198,8 +198,8 @@ EOF
 		cat >>${MOUNT_DIR}/etc/apt/sources.list <<EOF
 deb $1-security ${RELEASE}/updates main
 deb-src $1-security ${RELEASE}/updates main
-#deb $1 ${RELEASE}-updates main
-#deb-src $1 ${RELEASE}-updates main
+deb $1 ${RELEASE}-updates main
+deb-src $1 ${RELEASE}-updates main
 EOF
 	fi
 
