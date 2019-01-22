@@ -14,7 +14,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # Parse input parameters
 usage() {
-	echo "Usage: $0 --release|-r <jessie|wheezy> [options]
+	echo "Usage: $0 --release|-r <wheezy|jessie|stretch|buster|sid> [options]
 Options are:
  --minimal|-m
  --debootstrap-url|-u <debootstrap-mirror> (default: http://http.debian.net/debian)
@@ -91,7 +91,7 @@ for i in $@ ; do
 	;;
 	"--sources.list-mirror"|"-s")
 		if [ -z "${2}" ] ; then
-			echo "No parameter defining the hook script"
+			echo "No parameter defining the sources.list mirror"
 			usage
 		fi
 		SOURCE_LIST_MIRROR=${2}
